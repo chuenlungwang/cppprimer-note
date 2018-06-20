@@ -440,4 +440,196 @@ r2 = 0; //错误!! const 引用不能改变值
 
 ### 2.4.2 指针和 const
 
-##P98
+指针可以定义为指向 const 对象（point to const）的指针，指向 const 对象的指针不能用于改变指向对象的值。const 对象的地址只能保存在指向 const 对象的指针中。而非 const 对象的地址既可以保存在指向非 const 对象指针中，也可以保存在指向 const 对象指针中。跟引用一样，指向 const 对象的指针与对象本身是否是 const 没有关系，定义指向 const 的指针只是说不能通过指针改变对象的值，如果对象是可变的，那么可以通过别的方式改变对象值。
+
+指向 const 的指针只是“认为”它们指向的对象是 const 的。
+
+#### const 指针
+
+指针跟引用的区别在于指针是对象，所以可以定义 const 指针（const pointer），所谓 const 指针就是指针本身不可变。const 指针跟别的 const 对象一样必须初始化，并且初始化只有其值不能改变。定义 const 指针得在 * 后面放置 const 限定符，在 * 前或者基础类型前放置 const 都是定义指向 const 对象的指针。如：
+````cpp
+int errNumb = 0;
+int *const curErr = &errNumb; //指向 int 对象的 const 指针
+const double pi = 3.14159;
+const double *const pip1 = &pi; //指向 const 对象的 const 指针
+double const *const pip2 = &pi; //与上面含义完全一致的指针
+````
+要理解这种复杂定义的指针需要按英语方式从右往左读，pip is a const pointer to an object of type const double 。指针自身的 const 与是否可以使用指针改变底层对象无关，是否可以改变底层对象取决于是否指向 const 对象，比如可以用 curErr 改变 errNumb 的值，虽然 curErr 是 const 指针。
+
+### 2.4.3 顶层 const（Top-Level const）
+
+指针可以分开独立讨论指针本身是否为 const 的和指针指向的对象是否为 const 。我们称指针本身是 const 为顶层 const（top-level const），称指针指向一个 const 对象为底层 const（low-level const）。顶层 const 说明对象本身是 const 的，顶层 const 可以出现在任何对象类型。底层 const 只能出现在复合类型的基础类型中，指针声明可以同时包含顶层 const 和底层 const 。const 引用总是底层 const 。
+
+顶层 const 和 底层 const 区别在于拷贝一个对象时，其顶层 const 会被忽略。如：
+````cpp
+int i = 0;
+const int ci = 42;
+const int *p2 = &ci;
+const int *const p3 = p2;
+i = ci; //ci 的顶层 const 被忽略
+p2 = p3; //p3 的顶层 const 被忽略，但是底层 const 必须匹配
+int *p = p3; //错误!! 原因是底层 const 必须匹配
+p2 = &i; //可将 int* 转为 const int*
+int &r = ci; //错误!! 引用中的 const 总是底层 const，不能忽略
+const int &r2 = i; //可将 const int& 绑定到 int 类型
+````
+复制对象不会改变被复制的对象，所以对象本身的 const 即顶层 const 可以被忽略。然而底层 const 是不能被忽略的，两个对象间必须有相同的底层 const 限定符。或者将非 const 转为 const，但不能做相反的转换。
+
+### 2.4.4 constexpr 和常量表达式
+
+常量表达式（constant expression）是值在编译期求值，并且值不可变的表达式。字面是常量表达式，由常量表达式初始化的 const 对象也是常量表达式。非 const 对象或者不是由常量表达式初始化的 const 对象都不是常量表达式。
+
+#### constexpr 变量
+
+在大系统中往往程序员自己去判断常量表达式是很困难的，而在某些情况下又必须使用常量表达式，通常定义和使用的地方是分离的。在 C++11 中可以通过在定义变量时加上 constexpr 来检查此 const 变量是由常量表达式初始化的。如：
+````cpp
+constexpr int mf = 20;
+constexpr int limit = mf + 1;
+constexpr int sz = size(); //仅当 size 函数是常量函数（constexpr function）时才合法
+````
+在第 6 章中将会描述如何将函数定义为 constexpr 函数，这样的函数必须足够简单使得可以在编译期间求值。常量函数可以用于初始化 constexpr 变量。建议将所有的常量表达式初始化的变量都定义为 constexpr ，强制要求编译器进行检查。
+
+#### 字面类型（Literal Types）
+
+因为常量表达式必须在编译期进行求值，所以 constexpr 变量的类型必须符合这一限制，这些类型必须足够简单使得可以在编译期进行求值，所以称为字面类型。这些类型包括算术类型、引用和指针，但是不包括常见的类类型。第 7 章将介绍字面类（Literal Classes）和 19 章介绍的枚举也是字面类型。
+
+对于引用和指针定义为 constexpr 是有限制的，指针可以初始化为 `nullptr` 和 0 字面量，两者也可以初始化为绑定固定地址的对象。在函数内部定义的变量不是固定地址对象，而定义在函数外的或者定义为 static 的变量是固定地址变量，这种变量从程序一启动就存在，并且持续到程序结束。只有这种变量才能用于初始化 constexpr 引用和指针。即便是定义在函数内部的 const 或 constexpr 变量地址也不是固定的。
+
+当将 constexpr 运用于指针时，需要特别注意 constexpr 是运用于指针本身而不是指针所指对象。constexpr 隐含的意思是顶层 const。如以下声明是完全不同的：
+````cpp
+const int *p = nullptr;  //p 指向 const 对象
+constexpr int *q = nullptr; //q 本身是 const 的
+````
+constexpr 指针可以指向 const 对象。如：
+````cpp
+constexpr int i = 42; //必须定义在函数外面，i 是 const int 类型
+constexpr const int *p = &i; // p 是 const int *const 类型，指向固定地址对象 i
+````
+
+## 2.5 类型处理
+
+本节将当类型变得复杂而难以理解时的解决方案：类型别名（Type Aliases）、auto、decltype 关键字。C++ 和 C 的关键字都很容易变得复杂而难以理解，关键就在于使用了很多符号（* & () []）进行嵌套组合，导致要真正理解类型的含义需要费一番功夫，而且过长的类型名很容易拼写错误。过于沉溺于类型是什么，而不是将精力集中在需要解决的问题上是一种舍近求远的措施。动态语言用编译器类型检查交换省略程序员拼写类型名的工作，各有取舍。近年来静态类型语言的发展就是用语法糖减轻程序员拼写类型的工作，Java, C++, Scala 都在这方面做出了努力。
+
+### 2.5.1 类型别名
+
+类型别名分为两种方式：旧式 C 的 `typedef` 和新式 C++ 的 using 。类型别名就是给长的易错的难以理解的类型名字定义一个短的名字。使用这个短名字跟使用原来的长名字效果是一样的。短名字的好处在于简化类型定义、易于使用并且强调了类型的作用。
+````cpp
+typedef double wages;
+typedef wages base, *p;
+````
+以上将 wages 定义为 double 的同义词，将 base 定义为 wages 同义词，进而是 double 的同义词。p 则是类型 double* 。`typedef` 是基础类型的一部分，有 typedef 的声明是在定义类型别名而不是变量，与定义变量一样，声明符中的 * 不会对所有名字起作用。
+
+这里的例子其实很差，并不能反映真实项目代码中的用法，也是我在写笔记时觉得很恶心的地方，相比于 C 语言编程那本书来说给出的示例代码太过于弱智，没有什么实际的用处。为了讲语法而给出一大堆如此不合常理的例子，并且没有一个是完整的例子，也就是说讲到这里还不能让人写出一个完整的小程序，解决一些实际的问题。原因可能是语言过于庞大，但事实是 C++ 编程思想一书很早就开始给出很多可以实际跑起来的例子，那本书相对来说写的更好，除了它没有跟上标准之外。C++ primer 会将一些 C 语言编程不讲的内容进行细化，如：基础类型（base type）和声明符（declarator）的概念，有好有坏，好处是懂的更深入，坏处是记忆量变大了。
+
+不得不说的是 C++ 确实是一门很大的语言，从书的厚度就可以看出，C 是一本不到三百页的小册子，而 C++ 是一本上千页的砖头。
+
+C++11 定义了新的定义别名方式，语法：`using name = type` 将定义 name 为 type 的别名。使用类型别名跟类型名的效果是一样的，因而类型别名可以出现任何类型名出现的地方。
+
+定义指针的类型别名时需要注意，如果用 const 修饰类型别名将导致指针本身是 const 的，而不是指针所指向对象是 const。如：
+````cpp
+typedef char *pstring;
+const pstring cstr = 0; //指向 char 类型的 const 指针
+const char *astr = 0; //指向 const char 类型的指针
+````
+这里 pstring 是指向 char 类型的指针，const 修饰的是 pstring，因而，`const pstring` 是指向 char 的 const 指针。这是反直觉的。其实，纵观整个 C++ 就这一个特例，记住就行。
+
+### 2.5.2 auto 类型限定符
+
+C++ 中可以使用 auto 语法糖让编译器去推断变量的类型，使用 auto 的变量必须具有初始值。如：
+````cpp
+auto item = val1 + val2;
+````
+以上如果 val1 和 val2 是 Sales_item 的话，那么 item 是 Sales_item。如果是 double 的话，item 就是 double 类型。auto 可以定义多个变量，声明中的所有初始值必须拥有一致的类型，特别是当涉及到 auto 推断的引用、指针、const 混杂在一起时会变得尤其复杂。如：
+````cpp
+auto i = 0, *p = &i; // i 是 int 类型，p 是指向 int 的指针
+auto sz = 0, pi = 3.14; //错误!!! sz 和 pi 的类型不一致
+````
+编译器推断的 auto 的类型并不是与初始值完全匹配的。使用引用作为初始值，auto 推断的是引用绑定的对象类型。auto 会忽略顶层 const ，但是底层 const 会保留。
+````cpp
+int i = 0, &r = i;
+auto a = r; // a 是一个 int
+const int ci = i, &cr = ci;
+auto b = ci; // int
+auto c = cr; // int
+auto d = &i; // int*
+auto e = &ci; // const int*
+````
+如果需要顶层 const，需要显式写出。如：
+````cpp
+const auto f = ci; //const int
+````
+还可以用 auto 声明引用，如：
+````cpp
+auto &g = ci; //const int&
+auto &h = 42; //错误!! 不能将普通引用绑定到字面量上
+const auto &j = 42; //const int&
+````
+当声明一个 auto 推断类型的引用时，初始值中的 const 不会被忽略。
+````cpp
+auto k = ci, &l = i;  //k 是 int, l 是 int&
+auto &m = ci, *p = &ci; //m 是 const int&, p 是 const int*
+auto &n = i, *p2 = &ci; //错误!!! n 是 int, p2 是 const int*
+````
+
+### 2.5.3 decltype 类型说明符
+
+C++11 中引入了 decltype 类型说明，其作用在于由编译器从表达式中推断类型，编译器将对表达式进行分析得出结果的类型但不会真正求值。如：
+````cpp
+decltype(f()) sum = x; //sum 的类型是 f() 的返回值类型，但不会真的调用 f()
+````
+当将 decltype 运用于变量时，将会保留变量的顶层 const 和引用类型。只有在 decltype 表达式中引用不被当做其绑定的对象的别名。
+````cpp
+const int ci = 0, &cj = ci;
+decltype(ci) x = 0; //int
+decltype(cj) y = x; //const int&
+decltype(cj) z; //错误!!! 引用必须初始化
+````
+当将 decltype 运用于表达式时，如果表达式返回的是左值则 decltype 返回的类型是引用类型，解引用操作符就是特别典型的例子。如：
+````cpp
+int i = 42, *p = &i, &r = i;
+decltype(r+0) b; //int
+decltype(*p) c; //错误!!! c 是 int&
+````
+为了得到变量的引用类型有一种简单的方式就是 `decltype((variable))` ，在变量名外加上括号就成为一个返回变量的表达式，并且求值结果是左值。因而，decltype 返回的是引用。`decltype(variable)` 仅当变量本身是引用时才会返回引用类型。
+````cpp
+decltype((i)) d; //错误!!! int& 类型必须得初始化
+decltype(i) e; // int
+````
+
+## 2.6 自定义数据结构
+
+数据结构（data structure）是一种聚合相关数据元素和使用数据的策略的方式。在 C++ 中通过定义类来自定义数据结构。本章将描述没有任何方法的类。如：
+````cpp
+struct Sales_data {
+    std::string bookNo;
+    unsigned units_sold = 0;
+    double revenue = 0.0;
+};
+````
+C++ 中可以用 struct 和 class 关键字定义类。struct 定义的类默认访问权限是 public ，class 定义的类默认访问权限是 private 。除了与别的语言一样的特性（类作用域、类实例字段是每个对象有一份拷贝、类体可以为空、用点号（.）访问成员）外，C++ 的类以分号（;）结尾，原因在于 C++ 允许在类体后定义变量，分号用来结束声明符（通常为空）。
+````cpp
+struct Sales_data {} accum, trans, *salesptr;
+````
+建议不要将类定义和变量定义放在同一条语句中。
+
+在 C++11 中允许为数据成员类内初始值（in-class initializer），没有初始值的成员将执行默认初始化（内置类型初始化为 0，类执行类的默认构造函数）。类内初始值的形式必须是列初始化或者等号初始化，类似于函数调用的括号形式的初始化是不允许的。
+
+C++ 规定在同一个文件中只能有一个类定义，这类似于 static 变量或者 const 变量。同时，如果类定义存在于多个文件中，它们必须保持一致。所以，类定义一般放在头文件中。如果头文件更新了，包含头文件的源文件必须重新编译。
+
+## 术语
+
+- 基础类型（base type）：在声明语句中处于声明符（declarators）的前面的类型说明符，基础类型可以被 const 修饰。基础类型为声明语句提供共同的类型，声明符将以此为基础进行声明；
+- 绑定（bind）：将一个名字和给定实体相关联，因而，使用名字就是使用底层的实体。引用就是将名字绑定到对象上；
+- 常量表达式（constant expression）：可以在编译期间进行求值的表达式；
+- 数据成员（data member）：组成对象的数据元素，对象占据内存的元素。每个对象有自己独立的数据成员拷贝，数据成员可以在类内进行初始化；
+- 声明符（declarator）：声明的一部分，包含声明的名字和类型修饰符（* & []）；
+- 默认初始化（default initialization）：当没有显式给出初始值时如何进行初始化。类对象初始化取决于类本身，定义在类中或者全局作用域中的内置类型值初始化为 0，定义在函数中的内置类型值初始化为未定义值；
+- 类内初始化（in-class initializer）：类定义时提供数据成员的初始化值，类内初始化必须是等号符号或者大括号形式初始化；
+- 列初始化（list initialization）：用括号形式进行初始化，括号中放油一个或多个初始值；
+- 底层 const（low-level const）：在复合类型中与基础类型相结合的 const ，初始化时不会被忽略；
+- 顶层 const（top-level const）：修饰对象本身的 const；
+- 临时对象（temporary）：由编译器在对表达式求值时定义的未命名对象。临时对象将存活到生成临时对象的表达式结束的地方；
+- 类型说明符（type specifier）：类型的名字；
+- 未定义（undefined）：语言没有明确说明含义的地方，通常依赖于机器、编译器实现，并且成为难以定位的问题来源；
+- 未初始化（uninitialized）：没有给出初始值的变量定义，尝试使用未初始化变量的结果是未定义的；
+- 字（word）：机器执行整数运算的自然尺寸，通常也是 int 类型的长度 4 字节；
