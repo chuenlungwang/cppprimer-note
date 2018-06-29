@@ -4,15 +4,22 @@
 
 int main()
 {
-    unsigned cnt = 42;
+    const unsigned cnt = 5;
     constexpr unsigned sz = 42;
 
     int arr[cnt] = {190, 23, 54};
+    int sum = 0;
+    for (int i : arr)
+    {
+        sum += i;
+    }
+    std::cout << "The sum is " << sum << std::endl;
     std::string bad[cnt];
     for (int i=0; i<cnt; i++)
     {
-        std::cout << arr[i] << std::endl;
+        std::cout << arr[i] << " ";
     }
+    std::cout << std::endl;
     std::string *parr[sz];
     int a5[2] = {0,1};
     int a3[5] = {0,1,2};
