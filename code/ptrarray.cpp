@@ -38,5 +38,12 @@ int main()
     int k = p[-2];
     std::cout << (&p[-2] == arr) << k << std::endl;
 
+    int arri[] = {10,20,30,40,50,60};
+    int *ptri = arri;
+    std::cout << sizeof(arri) << std::endl;
+    std::cout << sizeof(ptri) << std::endl;
+    int **pptr = &ptri;
+    int (*parray)[6] = &arri;
+
     return 0;
 }
