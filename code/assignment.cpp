@@ -12,16 +12,20 @@ int main()
     d = {3.14159};
     d = {};
     std::cout << "Zero: " << d << std::endl;
+    k = d = j;
 
     std::vector<int> vi;
     vi = {0,1,2,3,4,5,6,7,8,9};
 
     std::string s;
     s = {"abc"};
+    std::cout << "s: " << s << std::endl;
 
     std::string str1;
     str1 = {};
     std::cout << "empty string: " << str1 << std::endl;
+
+    int a[] = {};
 
     return 0;
 }
