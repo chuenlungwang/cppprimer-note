@@ -544,7 +544,7 @@ auto item = val1 + val2;
 auto i = 0, *p = &i; // i 是 int 类型，p 是指向 int 的指针
 auto sz = 0, pi = 3.14; //错误!!! sz 和 pi 的类型不一致
 ````
-编译器推断的 auto 的类型并不是与初始值完全匹配的。使用引用作为初始值，auto 推断的是引用绑定的对象类型。auto 会忽略顶层 const ，但是底层 const 会保留。
+编译器推断的 auto 的类型并不总是与初始值完全匹配的。编译器会将 auto 的类型调整到与通常的初始化规则一致。使用引用作为初始值，auto 推断的是引用绑定的对象类型。auto 会忽略顶层 const ，但是底层 const 会保留。
 ````cpp
 int i = 0, &r = i;
 auto a = r; // a 是一个 int
