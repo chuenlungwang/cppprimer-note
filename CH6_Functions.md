@@ -359,8 +359,105 @@ shorterString(const string &s1, const string &s2)
 ````
 通常来说，内联函数都是非常小的，常常只有一个表达式。
 
-### 6.5.3 Debugging 辅助特性
+constexpr 函数是通常是非常简单的函数，当接收常量表达式作为参数时，返回的值必定是常量值，其函数体所执行的操作亦必须是编译器可以在编译期间执行的操作。这样的情况下，constexpr 函数就可以作为常量表达式（constant expression）用于需要常量表达式的场景中。因而，constexpr 函数需要满足以下限制：返回类型和参数类型都必须是字面类型（literal type）（参考第二章内容），函数体内必须只包含一个 return 语句。如：
+````cpp
+constexpr int new_sz() { return 42; }
+constexpr int foo = new_sz();
+````
+编译可以验证 constexpr 函数返回的值是常量表达式，并且可以用于初始化 constexpr 变量，如果不符合限制，编译器会报错，并不允许编译通过。在符合条件的情况下编译器会将所有的 constexpr 函数调用都替换为求值结果。为了让编译器能够求值成功，编译器必须看到所有的 constexpr 的函数体代码，所以，隐式要求 constexpr 为内联的。
+
+constexpr 函数可以接收字面类型的参数，并对其执行运算，但所有的运算都必须是编译器可以完成的，也就是说一定不可以包含内存分配、对象初始化、IO 等操作，即没有运行时操作。但可以包括类型别名和 using 声明，这些是不涉及运行时操作的。
+
+接收参数的 constexpr 函数当用常量表达式参数进行调用时结果是常量表达式，当用运行时变量调用时结果不是常量表达式。语言是允许这样的操作的，仅当确实需要常量表达式时编译器才会要求 constexpr 函数返回常量表达式。如：
+````cpp
+constexpr size_t scale(size_t cnt) { return new_sz() * cnt; }
+int arr[scale(2)]; //常量表达式
+int i = 2;
+int a2[scale(i)]; //错误，scale(i)不是常量表达式
+````
+
+### 6.5.3 辅助 Debugging 的特性
+
+C++ 沿用了 C 中使用 assert 宏来断言某些不可能的状态，当 assert 中表达式求值结果为 false 将导致程序打印错误信息并退出。使用 assert 宏的文件不能再定义名为 assert 的函数、变量，否则将会被认为是 assert 宏，因为，宏替换发生在编译器编译之前。assert 宏的行为只有在没有定义宏 NDEBUG 时才会执行，可以通过在编译时提供编译选项 `-D NDEBUG` 来禁用掉 assert 宏的执行。通常，我们在开发时定义 assert ，在生产上线时关闭 assert 。
+
+C++ 编译器定义几个特殊的预处理变量用于辅助调试：
+
+- `__func__` 当前所在函数名；
+- `__FILE__` 当前所在文件名；
+- `__LINE__` 当前行号；
+- `__TIME__` 文件编译时的时间；
+- `__DATE__` 文件编译时的日期；
+
 ## 6.6 函数调用匹配
+
+函数匹配（function matching）发生在函数调用时，编译器依据函数调用的参数类型和个数选择哪个重载函数是最优的，通常这个过程是简单而直接的，仅当函数参数的个数一致而且类型又相关时会比较复杂。如：
+````cpp
+void f(int);
+void f(int, int);
+void f(double, double=3.14)
+f(5.6); //f(double);
+f(5); //f(int);
+f(5, 5);  //f(int, int);
+f(5, 5.6);  //错误，调用模糊
+````
+以上究竟调用哪个函数是很难分辨的，甚至有函数调用是错误的，因为，编译器亦不知该调用哪一个函数。
+
+编译器进行函数调用匹配分为三步：选择候选函数（candidate functions）和决定可行函数（viable functions），从可行函数中选择最优匹配。候选函数是与调用函数同名的可见重载函数集合。可行函数则是与调用匹配的函数，其参数数目一致并且类型要么精确匹配要么可以进行转换。如果没有可行函数则是调用不匹配错误，如果有多于一个可行函数，而没有一个是绝对优于另外一个的，则是调用模糊（ambiguous）错误。所谓优于意思是没有一个参数匹配是比别的可行函数差的，并且有至少一个参数匹配是优于别的可行函数的。所谓参数匹配的优只的是形参与实参之间的类型更加靠近。
+
+`f(5, 5.6);` 的前一个参数可已经精确匹配 `f(int, int);` 而第二个参数需要转换。对于 `f(double, double);` 则第二个参数精确匹配，但第一个参数需要转换。这里有一个观点：`int -> double` 的转型并不优于 `double -> int` 转换更优。
+
+通常不应该重载 `f(double, double)` 和 `f(int, int)` ，这并不是好的设计。同时定义引用参数和非引用参数也是非常不好的设计，函数调用必定产生调用模糊错误。如：`f(int)` 和 `f(int&)` 。
+
 ### 6.6.1 实参类型转换
+
+编译器为了决定出最佳匹配，对以下转换进行了排序，从上到下依次变差：
+
+- 精确匹配：包括完全一致，由数组或函数转为对应的指针类型，顶层 const 的增加或去除；
+- const 转换：指向非 const 对象指针转为指向 const 对象指针，非 const 引用转为 const 引用（第四章有描述）；
+- 整型提升；
+- 算数转换或指针转换（第四章有描述）；
+- 类类型转换；
+
 ## 6.7 函数指针
+
+函数指针就是指向函数的指针，函数指针的类型由函数的签名决定：返回值类型和参数列表类型，名字则被忽略。如：
+````cpp
+bool lengthCompare(const string&, const string&);
+````
+的类型为
+````cpp
+bool(const string&, const string&)
+````
+定义函数指针与定义数组指针类似，都需要用到括号来强制优先级。
+````cpp
+bool (*pf)(const string&, const string&);
+````
+如果定义为
+````cpp
+bool *pf(const string&, const string&);
+````
+其含义是声明一个函数，返回 bool 的指针。
+
+当需要函数指针时，函数名会自动转为指针。如：
+````cpp
+pf = lengthCompare;
+pf = &lengthCompare; //与以上完全一致
+````
+可以使用函数指针进行函数调用，如：
+````cpp
+bool b1 = pf("hello", "goodbye");
+bool b2 = (*pf)("hello", "goodbye");
+bool b3 = lengthCompare("hello", "goodbye"); //三个函数调用是完全一致的
+````
+函数指针之间不存在转换，不能令一个类型的函数指针指向别的不同类型的函数，即使是重载函数或者只有参数类型存在转换关系或者仅仅返回值类型不一样也是不可以的。不过，可以将 nullptr 或字面量 0 赋值给函数指针用于表示不指向任何函数。
+
+对于用重载的函数名进行初始化，编译器会依据指针的类型识别是哪一个重载函数，只有完全精确匹配才是正确的函数。
+
+C++ 的函数不能以函数作为参数，但可以将函数指针作为参数，这与数组是一样的。即便将形参写作函数形式，其实质也是一个函数指针。
+````cpp
+void useBigger(const string &s1, const string &s2, bool pf(const string&, const string&));
+void useBigger(const string &s1, const string &s2, bool (*pf)(const string&, const string&));
+//以上两个是完全一致的
+````
+
 ## 关键术语
