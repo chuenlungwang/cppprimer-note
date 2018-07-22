@@ -459,5 +459,52 @@ void useBigger(const string &s1, const string &s2, bool pf(const string&, const 
 void useBigger(const string &s1, const string &s2, bool (*pf)(const string&, const string&));
 //以上两个是完全一致的
 ````
+调用时将函数名作为实参，将自动转为函数指针。如：`useBigger(s1, s2, lengthCompare);`
+
+使用类型别名和 decltype 可以简化函数指针的声明。如：
+````cpp
+typedef bool Func(const string&, const string&);
+typedef decltype(lengthCompare) Func2;  //声明 Func 和 Func2 为函数类型
+typedef bool (*FuncP)(const string&, const string&);
+typedef decltype(lengthCompare) *FuncP2; //声明 FuncP 和 FuncP2 为函数指针
+````
+需要注意的是 decltype 并不会将函数类型自动转为指针。按以上声明之后，可以将 Func 和 FuncP 作为函数参数。如：
+````cpp
+void useBigger(const string&, const string&, Func);
+void useBigger(const string&, const string&, FuncP);
+````
+
+C++ 函数不能返回函数，但可以返回函数指针，这与数组特性一致。并且必须书写为返回函数指针，写成返回函数并不会自动转为返回函数指针。函数返回函数指针的书写格式是难以理解的，如：
+````cpp
+int (*f1(int))(int*, int);
+````
+表示一个函数 f1 返回 `int (*)(int*, int)` 函数指针。可以用别名的方式来简化返回类型，如：
+````cpp
+using F = int(int*, int); //F是函数类型
+using PF = int(*)(int*, int); //PF是指针类型
+PF f1(int);
+F f1(int); //错误
+F *f1(int);
+````
+除此之外还可以使用尾置返回类型的方式。如：
+````cpp
+auto f1(int) -> int(*)(int*, int);
+````
+还有就是直接使用 decltype 来推断返回类型。如：
+````cpp
+string::size_type sumLength(const string&, const string&);
+string::size_type largerLength(const string&, const string&);
+decltype(sumLength) *getFcn(const string&);
+````
+这与前面的返回数组指针是一样的，需要了解的是当将 decltype 运用于函数时，返回的是函数类型，并且不会自动转为函数指针。
 
 ## 关键术语
+
+- 调用模糊（ambiguous call）：一种编译期错误，当函数调用进行匹配时发现两个以上相同优良的匹配所产生的错误；
+- 自动对象（automatic objects）：仅当函数执行时存在的对象，当程序执行到对象定义时创建，当离开其所在块时销毁；
+- 最佳匹配（best match）：从一系列重载函数中选择一个函数，此函数与其它函数对比，至少有一个参数是优于其它函数的，并且没有一个参数是差于别的函数的；
+- 函数原型（function prototype）：函数声明，包括函数名字、返回类型和参数类型。要想调用一个函数，必须在调用之前声明函数原型；
+- 隐藏名字（hidden names）：在内嵌的作用域中声明的名字将隐藏之前在外部作用域中声明的名字；
+- 本地变量（local variables）：在块中定义的变量；
+- 对象声明周期（object lifetime）：每个对象都有自己的声明周期。自动对象从定义的位置创建，在退出所在块时被销毁。全局对象在函数执行即存在，一直存活到程序结束。本地 static 变量将在第一次执行定义时创建，并与全局变量一样一直存活到程序结束；
+- 递归循环（recursion looop）：描述缺少终止条件的递归函数，如果调用这种函数将最终耗尽程序的调用栈；
