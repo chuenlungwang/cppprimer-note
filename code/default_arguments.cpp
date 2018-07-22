@@ -3,18 +3,25 @@
 
 typedef std::string::size_type sz;
 std::string screen(sz ht, sz wid=80, char backgrnd='&');
-std::string screen(sz ht=90, sz wid, char backgrnd);
 
 sz wd = 80;
+std::string screen(sz ht=wd, sz wid, char backgrnd);
+
+sz ht_();
 
 int main()
 {
+    sz wd = 200;
     screen();
-    std::string screen(sz ht=wd, sz wid=70, char backgrnd='*');
+    ::wd = 100;
     screen();
-    wd = 100;
+    std::string screen(sz ht=90, sz wid=70, char backgrnd='*');
     screen();
     return 0;
+}
+
+sz ht_() {
+    return 1;
 }
 
 std::string screen(sz ht, sz wid, char backgrnd)
