@@ -3,14 +3,14 @@
 
 class Sales_data {
 public:
-    std::string isbn() const { return bookNo_; }
+    std::string isbn() const { bookNo_; }
     Sales_data& combine(const Sales_data&);
     friend std::ostream& print(std::ostream&, const Sales_data&);
     friend std::istream& read(std::istream&, Sales_data&);
 private:
-    double avg_price() const;
     std::string bookNo_;
-    unsigned units_sold_ = 0;
+    unsigned units_sold_;
+    double avg_price() const;
     double revenue_ = 0.0;
 };
 
