@@ -3,20 +3,35 @@
 
 class Sales_data {
 public:
-    std::string isbn() const { bookNo_; }
+    Sales_data() = default;
+    Sales_data(const std::string &s) : bookNo_(s) {  }
+    Sales_data(const std::string &s, unsigned n, double p):
+        bookNo_(s), units_sold_(n), revenue_(p*n) {  }
+    Sales_data(std::istream &);
+
+    std::string isbn() const { return bookNo_; }
     Sales_data& combine(const Sales_data&);
+
     friend std::ostream& print(std::ostream&, const Sales_data&);
     friend std::istream& read(std::istream&, Sales_data&);
+    friend Sales_data add(const Sales_data&, const Sales_data&);
 private:
-    std::string bookNo_;
-    unsigned units_sold_;
     double avg_price() const;
+    std::string bookNo_;
+    unsigned units_sold_ = 0;
     double revenue_ = 0.0;
 };
 
+std::ostream& print(std::ostream&, const Sales_data&);
+std::istream& read(std::istream&, Sales_data&);
 Sales_data add(const Sales_data&, const Sales_data&);
 
 ////////////////////////////////////////////////////////////////////////
+
+Sales_data::Sales_data(std::istream &is)
+{
+    read(is, *this);
+}
 
 double Sales_data::avg_price() const
 {
@@ -60,7 +75,7 @@ Sales_data add(const Sales_data &lhs, const Sales_data &rhs)
 
 int main()
 {
-    Sales_data total;
+    Sales_data total = Sales_data();
     if (read(std::cin, total)) {
         Sales_data trans;
         while (read(std::cin, trans)) {
