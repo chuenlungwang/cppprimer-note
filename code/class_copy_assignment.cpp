@@ -6,7 +6,7 @@ public:
     mystring() {
         std::cout << "mystring()" << std::endl;
     }
-    mystring(const char *s)
+    /* explicit */ mystring(const char *s)
     {
         std::cout << "mystring(const char *s)" << std::endl;
     }

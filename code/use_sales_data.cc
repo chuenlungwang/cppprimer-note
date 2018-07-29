@@ -7,7 +7,7 @@ public:
     Sales_data(const std::string &s) : bookNo_(s) {  }
     Sales_data(const std::string &s, unsigned n, double p):
         bookNo_(s), units_sold_(n), revenue_(p*n) {  }
-    Sales_data(std::istream &);
+    explicit Sales_data(std::istream &);
 
     std::string isbn() const { return bookNo_; }
     Sales_data& combine(const Sales_data&);
@@ -28,7 +28,7 @@ Sales_data add(const Sales_data&, const Sales_data&);
 
 ////////////////////////////////////////////////////////////////////////
 
-Sales_data::Sales_data(std::istream &is)
+/* explicit */ Sales_data::Sales_data(std::istream &is)
 {
     read(is, *this);
 }
@@ -44,6 +44,7 @@ double Sales_data::avg_price() const
 
 Sales_data& Sales_data::combine(const Sales_data& rhs)
 {
+    std::cout << rhs.bookNo_ << std::endl;
     this->units_sold_ += rhs.units_sold_;
     this->revenue_ += rhs.revenue_;
     return *this;
@@ -76,6 +77,9 @@ Sales_data add(const Sales_data &lhs, const Sales_data &rhs)
 int main()
 {
     Sales_data total = Sales_data();
+    std::string null_book = "9-999-99999-9";
+    total.combine(static_cast<const Sales_data>("9-999-99999-9"));
+    total.combine(static_cast<const Sales_data>(std::cin));
     if (read(std::cin, total)) {
         Sales_data trans;
         while (read(std::cin, trans)) {

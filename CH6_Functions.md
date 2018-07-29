@@ -359,7 +359,7 @@ shorterString(const string &s1, const string &s2)
 ````
 通常来说，内联函数都是非常小的，常常只有一个表达式。
 
-constexpr 函数是通常是非常简单的函数，当接收常量表达式作为参数时，返回的值必定是常量值，其函数体所执行的操作亦必须是编译器可以在编译期间执行的操作。这样的情况下，constexpr 函数就可以作为常量表达式（constant expression）用于需要常量表达式的场景中。因而，constexpr 函数需要满足以下限制：返回类型和参数类型都必须是字面类型（literal type）（参考第二章内容），函数体内必须只包含一个 return 语句。如：
+constexpr 函数是通常是非常简单的函数，当接收常量表达式作为参数时，返回的值必定是常量值，其函数体所执行的操作亦必须是编译器可以在编译期间执行的操作。这样的情况下，constexpr 函数就可以作为常量表达式（constant expression）用于需要常量表达式的场景中。因而，constexpr 函数需要满足以下限制：返回类型和参数类型都必须是字面类型（literal type）（参考第二章内容），函数体内必须只包含一个 return 语句，不能包含任何别的语句，但可以包含 typedef 和 using 声明语句或空语句，只要它们不执行任何运行时的操作。如：
 ````cpp
 constexpr int new_sz() { return 42; }
 constexpr int foo = new_sz();
