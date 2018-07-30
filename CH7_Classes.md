@@ -111,7 +111,8 @@ Sales_data:Sales_data() = default;
 
 **构造初始值列表**
 ````cpp
-Sales_data(const string &s, unsigned n, double p): bookNo(s), units_sold(n), revenue(p*n) {}
+Sales_data(const string &s, unsigned n, double p):
+    bookNo(s), units_sold(n), revenue(p*n) {}
 ````
 在参数列表后的冒号直到函数体的括弧之间的代码称为构造初始值列表（constructor initializer list），它的作用是给对象的成员提供初始值，它是一系列的成员名，在每个成员名后跟随括号或括弧中的初始值，多个成员初始值之间用逗号分隔。
 
@@ -390,13 +391,15 @@ void X::h() { return f(); }  //正确，此时 f 已经被声明了
 
 一旦遇到了类名，剩下的定义部分（包括形参列表和函数体）就在类作用域内，因此，不需要类名进行限定就可以使用其它类成员。如：
 ````cpp
-void Window_mgr::clear(ScreenIndex i) { /* 函数定义 */}
+void Window_mgr::clear(ScreenIndex i)
+{ /* 函数定义 */}
 ````
 在遇到类名 Window_mgr 后，引用类的类型成员时不再需要用类名进行限定。
 
 而另一方面，当一个成员函数在类外定义时，由于返回类型出现函数名字前，此时作用域并不在类作用域内，因而，必须加上类的名字进行限定。如：
 ````cpp
-Window_mgr::ScreenIndex Window_mgr::addScreen(const Screen &s);
+Window_mgr::ScreenIndex
+Window_mgr::addScreen(const Screen &s);
 ````
 实质上，仅在类成员函数定义时才能够在类名后进入类作用域，返回值类型并不会使得进入限定其的类名的作用域。
 
@@ -414,7 +417,8 @@ typedef double Money;
 string bal;
 class Account {
 public:
-    Money balance() { return bal; } //Money使用的是外部声明的，bal 则使用的后面声明的。这是两步走的缘故。
+    //Money使用的是外部声明的，bal 则使用的后面声明的。这是两步走的缘故。
+    Money balance() { return bal; }
 private:
     Money bal;
 };
@@ -514,7 +518,8 @@ class X {
     int i;
     int j;
 public:
-    X(int val):j(val), i(j) {} //错误!! i将先初始化，然后才是 j
+    //错误!! i将先初始化，然后才是 j
+    X(int val):j(val), i(j) {}
 };
 ````
 以上代码的结果是 i 将被初始化为未定义值 j ，然后 j 被初始化为值 val 。一些编译器足够聪明可以为这种情况产生一个警告，通过 `-Wall` 选项可以让 g++ 产生这个警告。将构造初始值的顺序书写的与类定义中的声明的顺序一致是一个好的习惯。并且，如果可能，不要用别的成员来初始化另一个成员，这样可以不必思考成员初始化顺序。如：
@@ -528,7 +533,8 @@ X(int val): i(val), j(val) {}
 ````cpp
 class Sales_data {
 public:
-    Sales_data(std::string s = ""): bookNo(s) { }
+    Sales_data(std::string s = ""):
+        bookNo(s) { }
 };
 ````
 如果定义了带默认实参的构造函数，就不能再定义默认构造函数了，不然编译器就无法进行函数匹配了。即：一个构造函数如果提供了所有默认实参就相当于隐式定义了一个默认构造函数。
@@ -541,7 +547,8 @@ public:
 ````cpp
 class Sales_data {
 public:
-    Sales_data(std::string s, unsigned cnt, double price): bookNo(s), units_sold(cnt), revenue(cnt*price) {}
+    Sales_data(std::string s, unsigned cnt, double price):
+        bookNo(s), units_sold(cnt), revenue(cnt*price) {}
     Sales_data(): Sales_data("", 0, 0) {}
     Sales_data(std::string s): Sales_data(s, 0, 0) {}
 };
