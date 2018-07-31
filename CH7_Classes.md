@@ -32,7 +32,7 @@ string isbn() const { return bookNo; }
 
 this 参数由编译器隐式定义，并且不允许程序员定义参数或者变量名为 this ，this 总是指向当前调用的对象，所以，this 是一个 const 指针，我们不能改变 this 使其指向别的对象。
 
-参数列表后的 const 用来说明 this 指针指向 const 对象。通常情况下 this 是指向非 const 对象的 const 指针，尽管 this 是隐式定义的，它也遵循初始化原则，即不能将非 const 的 this 指向 const 对象，从而不能在 const 对象上调用非 const 的函数。为了在 const 对象上调用成员函数，必须使得 this 指向 const 对象，如果 this 指针可以在参数列表中，那么它将形如：`const Sales_data *const` ，然而 this 是隐式定义的并且不可能出现在参数列表中，所以语言通过在参数列表后放置 const 来表明 this 指针指向 const 对象，从而使得此成员函数称为 const 成员函数。isbn 函数可以描述为：
+参数列表后的 const 用来说明 this 指针指向 const 对象。通常情况下 this 是指向非 const 对象的 const 指针，尽管 this 是隐式定义的，它也遵循初始化原则，即不能将非 const 的 this 指向 const 对象，从而不能在 const 对象上调用非 const 的函数。为了在 const 对象上调用成员函数，必须使得 this 指向 const 对象，如果 this 指针可以在参数列表中，那么它将形如：`const Sales_data *const` ，然而 this 是隐式定义的并且不可能出现在参数列表中，所以语言通过在参数列表后放置 const 来表明 this 指针指向 const 对象，从而使得此成员函数称为 const 成员函数（const member function）。isbn 函数可以描述为：
 ````cpp
 string Sales_data::isbn(const Sales_data *const this)
 { return this->isbn; }
