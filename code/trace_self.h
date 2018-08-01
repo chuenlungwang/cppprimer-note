@@ -13,6 +13,14 @@ public:
     ~TraceSelf() {
         std::cout << id_ << ": ~TraceSelf()" << std::endl;
     }
+    TraceSelf(const TraceSelf &rhs) {
+        std::cout << id_ << ": TraceSelf(const TraceSelf&)" << rhs.id_
+                  << std::endl;
+    }
+    TraceSelf& operator=(const TraceSelf &rhs) {
+        std::cout << id_ << ": operator=()" << rhs.id_ << std::endl;
+        return *this;
+    }
 private:
     unsigned id_;
     static unsigned unique_;

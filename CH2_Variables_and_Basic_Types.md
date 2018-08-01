@@ -544,7 +544,7 @@ auto item = val1 + val2;
 auto i = 0, *p = &i; // i 是 int 类型，p 是指向 int 的指针
 auto sz = 0, pi = 3.14; //错误!!! sz 和 pi 的类型不一致
 ````
-编译器推断的 auto 的类型并不总是与初始值完全匹配的。编译器会将 auto 的类型调整到与通常的初始化规则一致。使用引用作为初始值，auto 推断的是引用绑定的对象类型。auto 会忽略顶层 const ，但是底层 const 会保留。
+编译器推断的 auto 的类型并不总是与初始值完全匹配的。编译器会将 auto 的类型调整到与通常的初始化规则一致，原因在于没有顶层 const 和引用类型是更为通用的初始化。使用引用作为初始值，auto 推断的是引用绑定的对象类型。auto 会忽略顶层 const ，但是底层 const 会保留。
 ````cpp
 int i = 0, &r = i;
 auto a = r; // a 是一个 int
@@ -580,7 +580,7 @@ decltype(f()) sum = x; //sum 的类型是 f() 的返回值类型，但不会真�
 当将 decltype 运用于变量时，将会保留变量的顶层 const 和引用类型。只有在 decltype 表达式中引用不被当做其绑定的对象的别名。
 ````cpp
 const int ci = 0, &cj = ci;
-decltype(ci) x = 0; //int
+decltype(ci) x = 0; //const int
 decltype(cj) y = x; //const int&
 decltype(cj) z; //错误!!! 引用必须初始化
 ````
