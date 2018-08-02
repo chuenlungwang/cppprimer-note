@@ -2,3 +2,4 @@
 *.exe
 *.o
 ._*
+*.stackdump

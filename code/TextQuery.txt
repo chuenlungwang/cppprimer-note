@@ -1,0 +1,54 @@
+What users say:“Cheers for a great tool that actually makes programmers want to
+write documentation!“
+Sphinx is a tool that makes it easy to create intelligent and beautiful
+documentation, written by Georg Brandl and licensed under the BSD license.
+It was originally created for the Python documentation, and it has excellent
+facilities for the documentation of software projects in a range of languages.
+Of course, this site is also created from reStructuredText sources using Sphinx!
+The following features should be highlighted:
+Output formats: HTML (including Windows HTML Help), LaTeX (for printable PDF
+versions), ePub, Texinfo, manual pages, plain text
+Extensive cross-references: semantic markup and automatic links for functions,
+classes, citations, glossary terms and similar pieces of information
+Hierarchical structure: easy definition of a document tree, with automatic links
+to siblings, parents and children
+Automatic indices: general index as well as a language-specific module indices
+Code handling: automatic highlighting using the Pygments highlighter
+Extensions: automatic testing of code snippets, inclusion of docstrings from
+Python modules (API docs), and more
+Contributed extensions: more than 50 extensions contributed by users in a second
+repository; most of them installable from PyPI
+
+
+Sphinx uses reStructuredText as its markup language, and many of its strengths
+come from the power and straightforwardness of reStructuredText and its parsing
+and translating suite, the Docutils. Documentation
+First steps with Sphinx
+overview of basic tasks
+Search page
+search the documentation
+Contents
+for a complete overview
+General Index
+all functions, classes, terms
+Changes
+release history
+You can also download PDF/EPUB versions of the Sphinx documentation from pop up
+menu on lower right corner.Examples
+Links to documentation generated with Sphinx can be found on the Projects using
+Sphinx page.
+For examples of how Sphinx source files look, use the “Show source” links on all
+pages of the documentation apart from this welcome page.
+You may also be interested in the very nice tutorial on how to create a customized
+documentation using Sphinx written by the matplotlib developers.
+There is a Japanese translation of this documentation, thanks to the Japanese Sphinx
+user group.
+A Japanese book about Sphinx has been published by O'Reilly: Sphinxをはじめよう /
+Learning Sphinx.Hosting
+Need a place to host your Sphinx docs? readthedocs.org hosts a lot of Sphinx docs
+already, and integrates well with projects' source control. It also features a
+powerful built-in search that exceeds the possibilities of Sphinx' JavaScript-based
+offline search.Contributor Guide
+If you want to contribute to the project, this part of the documentation is for you.
+Sphinx Developer’s Guide
+Sphinx Authors
