@@ -34,6 +34,82 @@ shared_ptr<list<int>> p2;
 以下是 `shared_ptr` 和 `unique_ptr` 共有的操作：
 
 - `shared_ptr<T> sp` `unique_ptr<T> up` 指向 T 类型的对象的空指针；
+- `p` 将 p 用于条件中，如果其指向一个对象将返回 true；
+- `*p` 解引用 p 从而得到其指向的对象，如果没有 p 是空的，结果未定义；
+- `p->mem` 等同于 `(*p).mem`；
+- `p.get()` 返回 p 中保存的对象指针。使用时需要当心：返回的指针所指向的对象可能被智能指针删除；
+- `swap(p, q)` `p.swap(q)` 交换 p 和 q 中的指针；
+
+以下是 `shared_ptr` 特有的操作：
+
+- `make_shared<T>(args)` 返回一个类型为 T 的动态对象的智能指针，使用 args 进行初始化对象；
+- `shared_ptr<T>p(q)` p 是 `shared_ptr` q 的拷贝，将增加 q 的引用计数，q 中指针必须可以转为 `T*`；
+- `p = q` p 和 q 是指向可转换指针的智能指针 `shared_ptr`。减少 p 的引用计数，并增加 q 的引用计数，当 p 的引用计数为 0 时，删除其所指向的动态对象的内存；
+- `p.unique()` 当 p 的引用计数是 1 时，返回 true，否则返回 false；
+- `p.use_count()` 返回 p 所指向对象的引用计数，可能是一个很慢的操作，主要用于调试目的；
+
+**make_shared函数**
+
+最安全的分配和使用动态内存的方式就是调用库函数 `make_shared`。这个函数分配并初始化动态对象，然后返回一个指向它的 `shared_ptr` 智能指针。`make_shared` 被定义在 memory 头文件中，它是一个模板函数，调用时需要提供需要创建的对象类型。如：
+````cpp
+shared_ptr<int> p3 = make_shared<int>(42);
+shared_ptr<string> p4 = make_shared<string>(10, '9');
+shared_ptr<int> p5 = make_shared<int>();  //此时 p5 指向的对象将被值初始化
+auto p6 = make_shared<vector<string>>(); //分配一个空的 vector<string> 对象
+````
+`make_shared` 使用其参数构建一个给定类型的对象，创建类对象时传的参数必须匹配其任一构造函数的原型，创建内置类型对象则直接传递其值。如果没有传递任何参数，则对象是值初始化的。
+
+**拷贝和赋值`shared_ptr`**
+
+当拷贝或赋值 `shared_ptr` 时，会相应更新各自对动态对象的引用计数。当拷贝 `shared_ptr` 时，计数增加，例如：当用于初始化另一个 `shared_ptr` 或者在赋值表达式中处于等号右边，或传递给函数、从函数中返回都会增加其引用计数。而当给 `shared_ptr` 赋予新值时，或者 `shared_ptr` 对象本身被销毁时，引用计数就会减少。
+
+一旦引用计数变为 0 之后，`shared_ptr` 就会自动释放其指向的对象的内存。
+````cpp
+auto r = make_shared<int>(42);
+r = q;
+````
+赋值给 r，将增加 q 所指向的对象的引用，而减少 r 原本所指向对象的引用，最终结果将导致那个对象被销毁。
+
+实现上是否使用计数器或者别的数据结构来跟踪到底有多少个计数器指向同一个对象。关键点在于 `shared_ptr` 类本身去跟踪有多少个智能指针指向同一个对象并且在合适的时机自动释放。
+
+**`shared_ptr`自动释放其指向的对象...**
+
+当最后一个指向对象的 `shared_ptr` 被销毁时，其指向的对象将自动销毁。销毁对象使用的成员函数是析构函数（destructor）。类似于构造函数，每个类都有析构函数。构造函数用于控制初始化，析构函数控制当对象销毁时发生什么。
+
+`shared_ptr` 的析构函数递减其引用计数，当引用计数变为 0 时，`shared_ptr` 的析构函数将销毁其指向的对象，并释放其内存。
+
+**并自动释放与其相关动态对象的内存**
+
+`shared_ptr` 可以自动释放动态对象使得使用动态内存相当简单。
+````cpp
+shared_ptr<Foo> factory(T arg)
+{
+    return make_shared<Foo>(arg);
+}
+void use_factory(T arg)
+{
+    shared_ptr<Foo> p = factory(arg);
+}
+````
+当 p 被销毁时，其引用计数将递减。由于 p 是指向 factory 分配的动态内存的唯一指针，当 p 被销毁时，它会自动销毁其指向的对象，并且内存将被释放。而如果有任何其它 `shared_ptr` 指向这个对象，那么它就不会被释放内存。
+
+由于内存只有到了最后一个 `shared_ptr` 销毁后才会释放，所以重要的是确保当不再需要动态对象时，`shared_ptr` 对象不会一直存在。一种可能保存不必要的 `shared_ptr` 是在将其放在容器中，之后又调整了容器使得不再需要所有元素，应当将不需要的元素擦除。
+
+**类与具有动态生命周期的资源**
+
+程序在以下三种情况下会使用动态内存：
+
+1. 不知道需要多少对象；
+2. 不知道需要的对象的精确类型；
+3. 在多个对象之间共享数据；
+
+**定义 StrBlob 类**
+
+代码见：[StrBlob.cc](https://github.com/chuenlungwang/cppprimer-note/blob/master/code/StrBlob.cc)
+
+最好的实现新集合类型的方式是使用容器库来管理元素，这样可以让容器库来管理元素的内存。然而，在 StrBlob 中不能直接存储 vector ，原因在于 vector 需要在与 StrBlobPtr 共享。为了共享元素可以在其中一个销毁时依然存在，需要将 vector 放在动态内存中，并由 `shared_ptr` 进行管理。
+
+值得注意的是 StrBlob 有一个以 `initializer_list<string>` 为参数的构造函数，这是新标准中给列初始化专门设计的。
 
 ### 12.1.2 直接管理内存
 ### 12.1.3 将 `shared_ptr` 运用于 new

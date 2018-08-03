@@ -14,6 +14,7 @@ public:
         std::cout << id_ << ": ~TraceSelf()" << std::endl;
     }
     TraceSelf(const TraceSelf &rhs) {
+        id_ = ++unique_;
         std::cout << id_ << ": TraceSelf(const TraceSelf&)" << rhs.id_
                   << std::endl;
     }

@@ -156,3 +156,11 @@ StrBlobPtr::incr()
     ++curr;
     return *this;
 }
+
+int main()
+{
+    StrBlob sb1{"1","2","3","4"};
+    StrBlob sb2 = sb1; //此时两个对象共享相同的 vector
+
+    return 0;
+}
