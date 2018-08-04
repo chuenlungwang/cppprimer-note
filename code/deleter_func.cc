@@ -26,12 +26,13 @@ void end_connection(connection *p)
 void f(destination &d)
 {
     connection c = connect(&d);
-    std::shared_ptr<connection> p(&c, end_connection);
+    std::shared_ptr<connection> p(&c, end_connection); //p会自动关闭连接
 }
 
 void f2(destination &d)
 {
     connection c = connect(&d);
+    //p会自动关闭连接
     std::unique_ptr<connection, decltype(end_connection)*> p(&c, end_connection);
 }
 
