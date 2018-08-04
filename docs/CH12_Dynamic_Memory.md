@@ -164,7 +164,7 @@ const int *pcs = new const string;
 
 **内存耗尽**
 
-当内存耗尽时，new 操作符会抛出 `bad_alloc` 异常。可以通过使用另一种形式的 new 来禁止 new 抛出异常，这种新形式的 new 称为 placement new，这种新的表达式可以传递额外的参数给 new。如：
+当内存耗尽时，new 操作符会抛出 `bad_alloc` 异常。可以通过使用另一种形式的 new 来禁止 new 抛出异常，这种新形式的 new 称为定位 new（placement new），这种新的表达式可以传递额外的参数给 new。如：
 ````cpp
 int *p1 = new int; //失败时抛出 std::bad_alloc
 int *p2 = new (nothrow) int; //失败时返回空指针
@@ -409,4 +409,64 @@ sp.reset();
 ````
 
 ### 12.2.2 allocator 类
+
+限制 new 使用的原因是 new 既分配内存又要构建对象。相同的，delete 既要析构又要释放内存。当我们动态创建对象时，这种方式是合适的。但当我们需要分配一大块内存时，通常会在之后需要的时候进行构建对象，在这种情况下最好是将分配和构建分离开来。以下演示 new 的局限性：
+````cpp
+string *const p = new string[n];
+string s;
+string *q = p;
+while (cin >> s && q != p + n)
+    *q++ = s;
+````
+这里有个问题就是可能根本不需要那么多元素，但是那些没用到的元素依然需要进行初始化。另外一个原因是那些用到的元素，马上又被新值给覆盖掉了。所以，这是一种浪费。更重要的某些类根本就没有默认构造函数，根本就不可能以这种方式分配动态数组。
+
+**allocator类**
+
+在 memory 头文件中定义了 allocator 类，其可以将分配和构建分开。它提供类型识别的分配未构建的内存。以下是 allocator 类支持的操作：
+
+- `allocator<T> a;` 定义一个可以分配 T 类型内存的 allocator 对象 a；
+- `a.allocate(n)` 分配足够容纳 n 个未初始化的 T 类型对象的内存；
+- `a.deallocate(p, n)` 释放 p 所指向的内存，其中 p 的指针类型必须是 `T*`，并且必须是之前由 allocate 分配的内存，n 必须是当时调用时传递的尺寸。所有这些已经构建过的对象都必须在调用此函数之前先被调用 destroy 函数进行析构；
+- `a.construct(p, args)` p 必须是指向类型 T 的裸内存的指针，args 则被传递给 T 类型的构造函数，args 必须符合其中一个构造函数的原型，这个构造函数将被用于构建 T 类型对象；
+- `a.destroy(p)` 在 p 指向的对象上进行析构，其中 p 必须是 `T*` 类型的；
+
+allocator 是模板类，所以在定义 allocator 时需要提供对象类型作为模板参数。如：
+````cpp
+allocator<string> alloc;
+auto const p = alloc.allocate(n); //分配 n 个未构建的字符串
+````
+allocator 分配的内存是未构建的。新标准中允许调用 construct 成员函数来在指定位置构建对象。
+````cpp
+auto q = p;
+alloc.construct(q++); //构建空字符串
+alloc.construct(q++, 10, 'c'); //q 是 cccccccccc
+alloc.construct(q++, "hi"); //q 是 hi
+````
+使用没有构建的对象是一种错误。必须在构建之后才能使用对象。当使用完毕后必须调用 destroy 进行析构，destroy 函数以指向对象的指针为参数，调用其析构函数。如：
+````cpp
+while (q != p)
+    alloc.destroy(--q);
+````
+只能对已经构建的对象进行析构，如果对未构建过的对象进行析构结果将是未定义的。已经被析构的对象占用的内存，可以被用于别的对象，或者将其返回给系统。通过 deallocate 来释放整个内存，如：
+````cpp
+alloc.deallocate(p, n);
+````
+传递给 deallocate 的指针一定不能是空指针，且必须指向由 allocate 分配内存所返回的指针，并且 n 必须与传递给 allocate 进行分配时一致。
+
+**复制和填充未初始化的内存**
+
+allocator 类定义了两个可以构建对象的算法，以下这些函数将在目的地构建元素，而不是给它们赋值：
+
+- `uninitialized_copy(b, e, b2)` 从由迭代器 b 和 e 指示的元素范围拷贝到由 b2 迭代器所指示裸内存。b2 必须是由 allocate 分配的，并且足够容纳拷贝进来的数据；
+- `uninitialized_copy_n(b, n, b2)` 从迭代器 b 开始拷贝 n 个值到迭代器 b2 所指示的裸内存中。限制与上面一致；
+- `uninitialized_fill(b, e, t)` 在有迭代器 b 和 e 指示的范围内，填充 t 的拷贝；
+- `uninitialized_full_n(b, n, t)` 在从迭代器 b 开始 n 个元素的裸内存上填充 t 的拷贝；
+
+与 copy 不同的是以上 `uninitialized_copy` 是在目的地进行构建而非赋值，与 copy 一样，它也返回递增后的目的地迭代器。
+
 ## 关键术语
+
+- 分配器（allocator）标准库中的类，用于分配未构建的内存；
+- 悬挂指针（dangling pointer）：一个指向已经被回收的内存的指针，继续使用此指针是未定义行为，并且错误非常难定位；
+- 删除器（deleter）：传递给智能指针用于替换 delete 来销毁指针绑定的对象；
+- 定位 new（placement new）：new 的一种形式，具有额外的参数传递给 new 后的括号，如：`new (nothrow) int` 告诉 new 不能在无法分配内存时抛出异常；
