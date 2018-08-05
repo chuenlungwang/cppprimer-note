@@ -8,9 +8,21 @@ public:
     Sales_data(const std::string &s, unsigned n, double p):
         bookNo_(s), units_sold_(n), revenue_(p*n) {  }
     explicit Sales_data(std::istream &);
+    Sales_data(const Sales_data &orig):
+        bookNo_(orig.bookNo_),
+        units_sold_(orig.units_sold_),
+        revenue_(orig.revenue_) {}
 
     std::string isbn() const { return bookNo_; }
     Sales_data& combine(const Sales_data&);
+
+    Sales_data& operator=(const Sales_data& rhs)
+    {
+        bookNo_ = rhs.bookNo_;
+        units_sold_ = rhs.units_sold_;
+        revenue_ = rhs.revenue_;
+        return *this;
+    }
 
     friend std::ostream& print(std::ostream&, const Sales_data&);
     friend std::istream& read(std::istream&, Sales_data&);

@@ -13,9 +13,14 @@ public:
     mystring(const mystring &rlh) {
         std::cout << "mystring(const mystring &rlh)" << std::endl;
     }
-    void operator=(const mystring &rlh)
+    //需要明白的是：虽然下面的直接赋值的构建方式并没有调用拷贝构造函数
+    //（这是编译器的优化）但，依然需要此拷贝构造函数可见，定义为 delete
+    //将无法通过编译
+    //mystring(const mystring &rlh) = delete;
+    mystring& operator=(const mystring &rlh)
     {
         std::cout << "operator=(const mystring &rlh)" << std::endl;
+        return *this;
     }
 };
 
