@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <utility>
+#include <memory>
 
 class StrVec {
 public:
@@ -10,9 +11,12 @@ public:
         cap(nullptr)
     {  }
     StrVec(const StrVec &);
+    StrVec(StrVec &&) noexcept;
     StrVec& operator=(const StrVec &);
+    StrVec& operator=(StrVec &&) noexcept;
     ~StrVec();
     void push_back(const std::string &);
+    void push_back(std::string &&);
     size_t size() const
     {
         return first_free - elements;
@@ -46,6 +50,12 @@ void StrVec::push_back(const std::string &s)
     alloc.construct(first_free++, s);
 }
 
+void StrVec::push_back(std::string &&s)
+{
+    chk_n_alloc();
+    //s 是左值，必须再次调用 std::move
+    alloc.construct(first_free++, std::move(s));
+}
 
 std::pair<std::string*, std::string*>
 StrVec::alloc_n_copy(const std::string* b, const std::string* e)
@@ -73,6 +83,16 @@ StrVec::StrVec(const StrVec &sv)
     cap = first_free = newdata.second;
 }
 
+StrVec::StrVec(StrVec &&sv) noexcept
+    : elements(sv.elements),
+    first_free(sv.first_free),
+    cap(sv.cap)
+{
+    sv.elements = nullptr;
+    sv.first_free = nullptr;
+    sv.cap = nullptr;
+}
+
 StrVec&
 StrVec::operator=(const StrVec &rhs)
 {
@@ -82,6 +102,22 @@ StrVec::operator=(const StrVec &rhs)
     free();
     elements = newdata.first;
     cap = first_free = newdata.second;
+    return *this;
+}
+
+StrVec&
+StrVec::operator=(StrVec &&rhs) noexcept
+{
+    if (this == &rhs)
+        return *this;
+    free();
+    elements = rhs.elements;
+    first_free = rhs.first_free;
+    cap = rhs.cap;
+
+    rhs.elements = nullptr;
+    rhs.first_free = nullptr;
+    rhs.cap = nullptr;
     return *this;
 }
 
@@ -97,10 +133,16 @@ StrVec::reallocate()
     std::string *newdata = alloc.allocate(newcapacity);
     auto dest = newdata;
     auto elem = elements;
+    auto last = uninitialized_copy(make_move_iterator(begin()),
+                       make_move_iterator(end()),
+                       newdata);
+    //取消循环构建，改用迭代器
+    /*
     while (elem != first_free)
         alloc.construct(dest++, std::move(*elem++));
+    */
     free();
     elements = newdata;
-    first_free = dest;
+    first_free = last;
     cap = newdata + newcapacity;
 }
