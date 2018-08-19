@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <set>
 
 class Quote {
 public:
@@ -13,6 +14,15 @@ public:
     {
         std::cout << "Quote::net_price" << std::endl;
         return n * price;
+    }
+
+    virtual Quote* clone() const &
+    {
+        return new Quote(*this);
+    }
+    virtual Quote* clone() &&
+    {
+        return new Quote(std::move(*this));
     }
 
     virtual ~Quote() = default;
@@ -44,6 +54,14 @@ public:
     using Disc_quote::Disc_quote;
     Bulk_quote() = default;
     double net_price(std::size_t count) const override;
+    Bulk_quote* clone() const &
+    {
+        return new Bulk_quote(*this);
+    }
+    Bulk_quote* clone() &&
+    {
+        return new Bulk_quote(std::move(*this));
+    }
 };
 
 double
@@ -63,6 +81,30 @@ Bulk_quote::net_price(std::size_t count) const
     }
 }
 
+class Basket {
+public:
+    void add_item(const std::shared_ptr<Quote> &sale)
+    {
+        items.insert(sale);
+    }
+    void add_item(const Quote &sale)
+    {
+        items.insert(std::shared_ptr<Quote>(sale.clone()));
+    }
+    void add_item(Quote &&sale)
+    {
+        items.insert(std::shared_ptr<Quote>(std::move(sale).clone()));
+    }
+    double total_receipt(std::ostream &) const;
+private:
+    static bool compare(const std::shared_ptr<Quote> &lhs,
+                        const std::shared_ptr<Quote> &rhs)
+    {
+        return lhs->isbn() < rhs->isbn();
+    }
+    std::multiset<std::shared_ptr<Quote>, decltype(compare)*> items{compare};
+};
+
 double
 print_total(std::ostream &os, const Quote &item, std::size_t n)
 {
@@ -70,6 +112,18 @@ print_total(std::ostream &os, const Quote &item, std::size_t n)
     os << "ISBN: " << item.isbn()
        << " # sold: " << n << " total due: " << ret << std::endl;
     return ret;
+}
+
+double
+Basket::total_receipt(std::ostream &os) const
+{
+    double sum = 0.0;
+    for (auto iter = items.cbegin(); iter != items.cend(); iter = items.upper_bound(*iter))
+    {
+        sum += print_total(os, **iter, items.count(*iter));
+    }
+    os << "Total Sale: " << sum << std::endl;
+    return sum;
 }
 
 int main()
