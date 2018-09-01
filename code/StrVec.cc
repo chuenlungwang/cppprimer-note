@@ -27,6 +27,9 @@ public:
     }
     std::string* begin() const { return elements; }
     std::string* end() const { return first_free; }
+
+    template <typename... Args>
+    void emplace_back(Args &&... args);
 private:
     void chk_n_alloc()
     {
@@ -124,6 +127,14 @@ StrVec::operator=(StrVec &&rhs) noexcept
 StrVec::~StrVec()
 {
     free();
+}
+
+template <typename... Args>
+inline void
+StrVec::emplace_back(Args&&... args)
+{
+    chk_n_alloc();
+    alloc.construct(first_free++, std::forward<Args>(args)...);
 }
 
 void
