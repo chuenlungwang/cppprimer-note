@@ -287,9 +287,114 @@ partNo<string> books;
 partNo<Vehicle> cars;
 partNo<Student> kids;
 ````
-这里将 partNo 定义为一族 pair 类，其中第二个成员是 unsigned，partNo 的第一个成员只要指定其第一个成员即可。
+这里将 partNo 定义为一族 pair 类，其中第二个成员是 unsigned，partNo 的使用者只能指定 pair 的第一个成员，却不能对第二个成员做出选择。
+
+**类模板的静态成员**
+
+与其它类一样，类模板可以声明静态成员（static members）。如：
+````cpp
+template <typename T> class Foo {
+public:
+    static std::size_t count() { return ctr; }
+private:
+    static std::size_t ctr;
+};
+````
+Foo 的每个类实例都有自己的静态成员实例。也就是说对于每个给定类型 X，都有一个  `Foo<X>::ctr` 和一个 `Foo<X>::count` 成员，而 `Foo<X>` 的所有对象都共享相同的 ctr 对象和 count 函数。
+
+与任何别的 static 数据成员一样，每个类实例必须只有一个 static 数据成员的定义。然而，每个类模板的实例有一个完全不一样的对象，因而，在定义静态数据成员时与在类外定义成员函数类似。如：
+````cpp
+template <typename T>
+size_t Foo<T>::ctr = 0;
+````
+与类模板的任何成员类似，定义的开始部分是模板参数列表，后跟随成员的的类型，然后是成员名字。成员名字中包含成员的类名，而此时的类名是从一个模板中生成而来的，所以包含模板的实参。因而，当 Foo 为每个特定义的模板实参进行实例化时，一个独立的 ctr 将为此类类型进行实例化并初始化为 0。
+
+与非模板类的静态成员类似，可以通过类的对象或者使用作用域操作符对静态成员进行直接访问。当然，为了通过类使用一个静态成员，必须是一个特定的类实例才行。如：
+````cpp
+Foo<int> fi;  //实例化类 Foo<int> 和静态数据成员 ctr
+auto ct = Foo<int>::count(); //实例化 Foo<int>::count 函数
+ct = fi.count(); //使用 Foo<int>::count
+ct = Foo::count(); //error: which template instantiation?
+````
+与任何别的成员函数类似，静态成员函数仅在被使用时实例化。
 
 ### 16.1.3 模板参数
+
+与函数参数名字类似，模板参数名字没有本质的含义。通常将类型参数记作 T，但可以使用任何名字：
+````cpp
+template <typename Foo>
+Foo calc(const Foo &a, const Foo &b)
+{
+    Foo temp = a;
+    return temp;
+}
+````
+
+**模板参数和作用域**
+
+模板参数遵循常规的作用域规则。模板参数的名字可以在其声明之后使用，直到模板的声明或定义的尾部。与任何别的名字类似，模板参数隐藏任何外部作用域的相同名字的声明。与绝大多数上下文不一致的是，作为模板参数的名字不能在模板中复用。如：
+````cpp
+typedef double A;
+template <typename A, typename B>
+void f(A a, B b)
+{
+    A tmp = a; //tmp has same type as the template parameter A, not double
+    double B; //error: redeclares template parameter B
+}
+````
+常规的名称隐藏规则导致 A 的类型别名被类型参数 A 所隐藏。由于不能复用模板参数的名字，将 B 声明为变量名是一个错误。
+
+由于模板参数名字不能被复用，模板参数名字只能在给定模板参数列表中出现一次。如：
+````cpp
+//error: illegal reuse of template parameter name V
+template <typename V, typename V> //...
+````
+
+**模板声明**
+
+模板声明必须包含模板的参数列表，如：
+````cpp
+//declares but does not define compare and Blob
+template <typename T> int compare(const T &, const T &);
+template <typename T> class Blob;
+````
+与函数参数一样，模板参数的名字不需要在声明和定义之间完全一样，如：
+````cpp
+//all three uses of calc refer to the same function template
+template <typename T> T calc(const T &, const T &);
+template <typename U> U calc(const U &, const U &);
+template <typename Type>
+Type calc(const Type &a, const Type &b) { /* ... */ }
+````
+以上三个用法都是表示同一个函数模板。当然，给定模板的所有声明和定义都必须具有相同数目和种类（类型或非类型）的参数。
+
+最佳实践：被某个文件所需要的所有模板声明都应该放在文件的头部，它们最好放在一起，并且是在所有使用这些名字之前就声明。
+
+**使用类的类型成员**
+
+前面的章节描述过使用作用域操作符（::）来访问静态成员和类型成员（type member），在常规代码中，编译器是知道一个名字是类型成员或者是静态成员。然而，当遇到模板时，编译器很可能就无法知道这个信息了，如，给定 T 模板类型参数，当编译器看到 `T::mem` 时，它将直到实例化时才能直到 mem 是类型成员还是静态成员。然而，有时必须得让编译器知道一个名字表示类型才能正确编译。例如以下表达式：
+````cpp
+T::size_type * p;
+````
+编译器必须知道 size_type 是类型，这是在定义一个名字 p 的变量，不然，就不会被处理为静态数据成员 size_type 与变量 p 相乘。
+
+默认情形下，语言认为通过作用域操作符访问的名字不是类型。如果要使用一个模板类型参数的类型成员，必须显式告知编译器这个名字是类型。那就得用 typename 这个关键字了。如：
+````cpp
+template <typename T>
+typename T::value_type top(const T &c)
+{
+    if (!c.empty())
+        return c.back();
+    else
+        return typename T::value_type();
+}
+````
+以上函数期待一个容器作为其实参，使用 typename 类指定其返回类型，并且在没有元素的情况下生成一个值初始化的元素用于返回。
+
+当想要告知编译器一个名字表示类型时，必须使用关键字 typename 而不是 class。
+
+**默认模板实参**
+
 ### 16.1.4 成员模板
 ### 16.1.5 控制实例化
 ### 16.1.6 效率和灵活性
