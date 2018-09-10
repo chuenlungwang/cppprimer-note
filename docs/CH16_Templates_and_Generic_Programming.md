@@ -160,6 +160,134 @@ Blob<double> prices;
 template <typename T>
 ret-type Blob<T>::member-name(parm-list)
 ````
+具体例子：
+````cpp
+template <typename T>
+void Blob<T>::check(size_type i, const std::string &msg) const
+{
+    if (i >= data->size())
+        throw std::out_of_range(msg);
+}
+````
+与其它定义在类模板外的成员函数一样，构造函数也是先声明类模板的模板参数。如：
+````cpp
+template <typename T>
+Blob<T>::Blob(): data(std::make_shared<std::vector<T>()) { }
+````
+此处亦是使用类模板自己的类型参数作为 vecotr 的模板实参。
+
+**实例化类模板成员函数**
+
+默认情况下，类模板的成员函数只有在程序使用模板函数时才会实例化。如果一个成员函数没有用到，那么就不会被实例化。成员只有在使用到时才会实例化的事实，使得我们可以实例化一个类，其使用到的类型实参只符合模板操作的部分要求。通常，一个类模板实例化类的成员只有在使用时才会被实例化。
+
+**简化在类代码中使用模板类名（Template Class Name）**
+
+在类模板自身的作用域中，可以使用模板名而不需要实参。当在类模板的作用域内，编译器认为使用模板自己的地方就像是指定了模板实参为模板自己的参数。如：
+````cpp
+template <typename T> class BlobPtr {
+public:
+    BlobPtr& operator++();
+};
+````
+与以下代码是一样的：`BlobPtr<T>& operator++();`
+
+**在类模板体外使用类模板名字**
+
+当在类模板体外定义成员时，必须记住直到看到类名时才处于类地作用域中。如：
+````cpp
+template <typename T>
+BlobPtr<T> BlobPtr<T>::operator++(int)
+{
+    BlobPtr ret = *this;
+    ++*this;
+    return ret;
+}
+````
+由于返回类型出现在类作用域的外面，所有必须告知返回类型是 BlobPtr 以其类型参数为实参的实例。在函数体内部，我们处于类的作用域中，所以在定义 ret 时不再需要重复模板实参，当不再提供模板实参，编译器认为我们使用与成员实例一样的类型实参。
+
+**类型模板和友元**
+
+当类定义中包含友元声明时，类和友元可以相互不影响的时模板或者不是模板。类模板可以有非模板的友元，授权友元访问其所有的模板实例。如果友元自身是模板，授权友元的类控制访问权限是授给模板的所有实例还是给特定的实例。
+
+**一对一友元**
+
+最常见的友元形式就是一个类模板与另一个模板（类或函数）的对应实例之间建立友元关系。如：Blob 类模板和 BlobPtr 类模板之间的友元关系，以及相等性判断（==）操作符之间的关系。代码如下：
+````cpp
+template <typename> class BlobPtr;
+template <typename> class Blob;
+template <typename T>
+bool operator==(const Blob<T>&, const Blob<T>&);
+template <typename T> class Blob {
+friend class BlobPtr<T>;
+friend bool operator==<T>(const Blob<T>&, const Blob<T>&);
+};
+````
+为了指定模板（类或函数）的特定实例，我们必须首先声明模板本身。模板的声明包括模板的模板参数列表。
+
+友元声明使用 Blob 的模板参数作为它们的模板实参。因而，这种友元被严格限定在具有相同类型的模板实参的 BlobPtr 和相等操作符的实例之间。如：
+````cpp
+Blob<char> ca; //BlobPtr<char> and operator==<char> are friends
+Blob<int> ia; //BlobPtr<int> and operator==<int> are friends
+````
+`BlobPtr<char>` 的成员可以访问 ca 的非共有部分，但 ca 与 ia 之间没有任何特殊的访问权限。
+
+**通用和特例（Specific）的模板友元**
+
+一个类可以让另一个模板的所有实例都是其友元，或者将友元限定在某一个特定的实例。如：
+````cpp
+template <typename T> class Pal;
+class C {
+friend class Pal<C>; //Pal instantiated with class C is a friend to C
+//all instances of Pal2 are friends to C;
+//no forward declaration required when we befriend all instantiations
+template <typename T> friend class Pal2;
+};
+template <typename T> class C2 {
+//each instantiation of C2 has the same instance of Pal as a friend
+friend class Pal<T>; //a template declaration for Pal must be in scope
+
+//all instances of Pal2 are friends of each instance of C2,
+//prior declaration is not needed
+template <typename X> friend class Pal2;
+
+//Pal3 is a nontemplate class that is a friend of every instance of C2
+//prior declaration for Pal3 is not needed
+friend class Pal3;
+};
+````
+为了让所有的实例都是友元，友元的声明中所使用的模板参数必须与类模板所使用的不一样，就像这里的 C2 中的 T 和 Pal2 中的 X 一样。
+
+**与模板本身的类型参数成为友元**
+
+在新标准中，可以使得模板的类型参数成为友元：
+````cpp
+template <typename Type> class Bar {
+friend Type;
+};
+````
+这里指明所有用于实例化 Bar 的任何类型都是 Bar 的友元。这里需要指出的是尽管一个友元通常是一个类或函数，但是 Bar 也可以用内置类型进行实例化。这种友元关系是允许的，这样才可以将 Bar 用内置类型进行实例化。
+
+**模板的类型别名**
+
+类模板的一个实例就是一个类类型，与任何别的类类型一样，可以定义一个 typedef 来作为实例化类的别名。如：
+````cpp
+typedef Blob<string> StrBlob;
+````
+由于模板不是类型，所以不能定义 typedef 作为模板的别名。也就是说不能定义 typedef 来指向 `Blob<T>`。
+
+然而，在新标准下可以用 using 声明来指定类模板的别名。如：
+````cpp
+template <typename T> using twin = pair<T, T>;
+twin<string> authors; //authors is a pair<string, string>
+````
+模板类型别名是一族类的别名。当定义模板类型别名时，可以固定一个或多个模板参数，如：
+````cpp
+template <typename T> using partNo = pair<T, unsigned>;
+partNo<string> books;
+partNo<Vehicle> cars;
+partNo<Student> kids;
+````
+这里将 partNo 定义为一族 pair 类，其中第二个成员是 unsigned，partNo 的第一个成员只要指定其第一个成员即可。
 
 ### 16.1.3 模板参数
 ### 16.1.4 成员模板
