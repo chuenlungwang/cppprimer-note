@@ -399,6 +399,31 @@ typename T::value_type top(const T &c)
 ### 16.1.5 控制实例化
 ### 16.1.6 效率和灵活性
 
+智能指针类型提供了描述模板设计者的设计选择很好的材料。`shared_ptr` 可以在创建或 reset 指针时传递一个删除器（deleter）来轻松覆盖之前的。而 `unique_ptr` 的删除器却是类型的一部分，我们必须在定义 `unique_ptr` 就显式提供一个类型作为模板实参，因而，给 `unique_ptr` 定制删除器会更加复杂。 
+
+删除器是如何被处理的与类的功能似乎并无本质上的关系，但这种实现策略却对性能有重大的影响。
+
+**在运行时绑定删除器**
+
+`shared_ptr` 的删除器是间接存储的，意味着可能作为指针或者一个包含指针的类，这是由于其删除器直到运行时才能被知道是何种类型，而且在其生命周期中还可以不断改变。一般来说，一个类的成员类型不会在运行时改变，所以此删除器必须是间接存储的。调用方式如：
+````cpp
+//value of del known only at runtime; call through a pointer
+//del(p) requires runtime jump to del's location
+del ? del(p) : delete p;
+````
+
+**在编译期绑定删除器**
+
+由于删除器的类型是作为 `unique_ptr` 的类型参数指定的，意味着删除器的类型可以在编译期就知道，因而，此删除器可以被直接存储。调用方式如：
+````cpp
+//del bound at compile time;
+//direct call to the deleter is instantiated
+del(p); // no runtime overhead
+````
+这个方式的好处在于不论代码执行哪个类型的删除器，其都是就地执行，意味着不需要做任何跳转，甚至对于简单的函数可以内联到调用处。这是编译期绑定的功劳。
+
+通过在编译期绑定删除器，`unique_ptr` 避免了调用删除器的运行时消耗；通过在运行时绑定删除器，`shared_ptr` 带来了灵活性，使其更容易定制新的删除器；
+
 ## 16.2 模板实参推断
 ### 16.2.1 转换和模板类型参数
 ### 16.2.2 函数模板显示实参
