@@ -425,13 +425,247 @@ del(p); // no runtime overhead
 通过在编译期绑定删除器，`unique_ptr` 避免了调用删除器的运行时消耗；通过在运行时绑定删除器，`shared_ptr` 带来了灵活性，使其更容易定制新的删除器；
 
 ## 16.2 模板实参推断
+
+默认情况下编译器使用调用实参来决定函数模板的模板参数。这个过程称为模板实参推断（template argument deduction），在推断过程中编译器使用调用的实参类型来选择哪个生成的函数版本是最合适的。
+
 ### 16.2.1 转换和模板类型参数
-### 16.2.2 函数模板显示实参
-### 16.2.3 尾部返回类型和类型转换
+
+与常规函数一样，传递给函数的模板的实参被用于初始化函数的参数。类型是模板类型参数的函数参数有特殊的初始化规则。只有非常有限的几个转换是自动运用于这种实参的。相比于转换实参，编译器会生成一个新的实例。
+
+与之前的描述一样，不论是参数还是实参中的顶层 const 都会被忽略。在函数模板中会执行的有限转换分别是：
+
+- const 转换：如果一个函数参数是 const 的引用或指针，可以传递一个非 const 对象的引用或指针；
+- 数组或函数至指针的转换：如果函数参数不是引用类型，那么指针转换将被运用于数组或函数类型。数组实参将被转为指向其首元素的指针，同样，函数实参将被自动转为指向函数类型的指针；
+
+其它任何类型的转换（算术转换、子类到基类的转换、用户定义转换）都不会执行。如：
+````cpp
+template <typename T> T fobj(T, T);
+template <typename T> T fref(const T &, const T &);
+int a[10], b[42];
+fobj(a, b);
+fref(a, b);
+````
+在 fobj 调用中，数组的类型不一样是无所谓的。两个数组都转为了指针，fobj 中的模板参数类型是 `int*`，而调用 fref 却是非法的，当参数是引用时，数组不能自动转为指针，此时 a 和 b 的类型是不匹配的，因而调用是错误。
+
+const 转换和数组或函数至指针的转换是模板类型中的实参到形参的唯一自动转换。
+
+**使用相同模板参数类型的函数参数**
+
+一个模板类型参数可以被用于多于一个的函数参数类型。由于只存在十分有限的转换，传递给这种参数的实参必须具有完全一样的类型，如果推断出来的类型不匹配，那么调用将会出错。如：`compare(lng, 1024);` 的调用将会出错，原因在于第一个参数被推断出来是 long，而第二个是 int，这并不匹配，所以模板实参推断就失败了。为了允许这种实参的常规转换，必须定义两个不同类型的模板参数。如：
+````cpp
+template <typename A, typename B>
+int flexibleCompare(const A &v1, const B &v2)
+{
+    if (v1 < v2) return -1;
+    if (v2 < v1) return 1;
+    return 0;
+}
+````
+此时用户可以提供两个不同类型的实参了。
+
+**Normal Conversion Apply for Ordinary Arguments**
+
+如果函数模板的参数的类型不是模板类型参数，即其是具体的类型，那么实参可以执行之前描述过的各种转换。如：
+````cpp
+template <typename T> ostream &print(ostream &os, const T &obj)
+{
+    return os << obj;
+}
+````
+其中第一个参数是具体的类型 ostream&，所以，可以执行正常的类型转换。
+
+### 16.2.2 函数模板显式实参
+
+在一些情形下根本不可能让编译器推断出模板的实参。在另外一些情形下，则是我们自己想控制模板的实例化。两者绝大多数时候发生在函数的返回类型与任何参数列表中的类型都不一样时。
+
+**指定显示模板实参**
+
+通过定义额外的模板参数来表示返回值的类型，如：
+````cpp
+template <typename T1, typename T2, typename T3>
+T1 sum(T2, T3);
+````
+在这种情况下编译器没有任何办法来推断 T1 的类型，调用必须在每次调用 sum 时为此模板参数提供显示模板实参（explicit template argument）。给函数模板提供显式模板实参与定义类模板实例是一样的，显式模板实参将被放在函数名之后的尖括号中，并且在实参列表之前。如：
+````cpp
+// T1 is explicitly specified; T2 and T3 are inferred from the argument types
+auto val3 = sum<long, long>(i, lng);
+````
+此调用中显式指定了 T1 的类型，编译器将从 i 和 lng 的类型中推断出 T2 和 T3 的类型。显式模板实参是从模板参数列表中的左边向右边依次匹配的。显式模板实参只能省略尾部的参数，并且是在可以从函数实参中推断出来的那些参数。意味着如下函数必须每次都提供所有的模板实参：
+````cpp
+template <typename T1, typename T2, typename T3>
+T3 alternative_sum(T2, T1);
+````
+
+**正常的转换可以运用于显式模板实参上**
+
+与正常的转换可以运用于具体类型函数参数一样，正常的转换也可以运用于被显式指定模板实参的函数参数上：
+````cppp
+long lng;
+compare(lng, 1024); // error: template parameters don't match
+compare<long>(lng, 1024); // ok: instantiates compare(long, long)
+compare<int>(lng, 1024); // ok: instantiates compare<int, int>
+````
+
+### 16.2.3 Trailing Return Types and Type Transformation
+
+使用显式模板参数来表示模板函数的返回值，当确实是想自己指定返回类型时是很好的。但有时强制显式模板实参却给自己增加了不必要的负担。比如想返回一个迭代器的解引用得到的元素的引用，在新的标准中可以使用尾后返回类型从而让编译器推断出来，而不需要显式指定模板类型参数。如：
+````cpp
+// a trailing return lets us declare the return type after the parameter list is seen
+template <typename It>
+auto fcn(It beg, It end) -> decltype(*beg)
+{
+    return *beg;
+}
+````
+这里告知编译器 fcn 的返回类型与解引用 beg 参数是一样的，解引用操作符返回左值，所以 decltype 推断出来的类型是一个元素的引用。如此，如果 fcn 在 string 序列上调用返回类型将是 `string&`，如果序列是 int 的，则返回值是 `int&` 的。
+
+**The Type Transformation Library Template Classes**
+
+有时我们不能直接返回我们需要的类型，如：想让 fcn 返回元素的值类型而不是引用。从迭代器中根本不可能得到一个值类型。为了获取元素的类型，我们可以使用类型转移模板（type gransformation template）。这些模板被定义在 `type_traits` 头文件中，通常定义在其中的类型被称为模板元编程（template metaprogramming）。
+
+| For Mod&lt;T&gt;, where Mod is | If T is                                | Then Mod&lt;T&gt;::type is |
+| :--                            | :--                                    | :--                        |
+| `remove_reference`             | X& or X&&<br/>otherwise                | X<br/>T                    |
+| `add_const`                    | X&, const X, or function<br/>otherwise | T<br/>const T              |
+| `add_lvalue_reference`         | X&<br/>X&&<br/>otherwise               | T<br/>X&<br/>T&            |
+| `add_rvalue_reference`         | X& or X&&<br/>otherwise                | T<br/>T&&                  |
+| `remove_pointer`               | `X*`<br/>otherwise                     | X<br/>T                    |
+| `add_pointer`                  | X& or X&&<br/>otherwise                | `X*`<br/>`T*`              |
+| `make_signed`                  | unsigned X<br/>otherwise               | X<br/>T                    |
+| `make_unsigned`                | signed type<br/>otherwise              | unsigned T<br/>T           |
+| `remove_extent`                | X[n]<br/>otherwise                     | X<br/>T                    |
+| `remove_all_extents`           | X[n1][n2]...<br/>otherwise             | X<br/>T                    |
+
+以上表格中的 `remove_reference` 用于获取元素类型，如：`remove_reference<int&>::type` 的结果是 int 类型。上面的难题的解决方案就是用 `remove_reference<decltype(*beg)>::type` 表示 beg 所指向的元素的值类型。如：
+````cpp
+template <typename It>
+auto fcn2(It beg, It end) -> typename remove_reference<decltype(*beg)>::type
+{
+    return *beg;
+}
+````
+type 是类模板的一个类型成员，这个类型由模板参数决定，因而，必须将 typename 关键字放在尾后返回类型的前面，用于告知编译器 type 表示一个类型。
+
+上面表格中所有的类型转义模板都以相同的方式进行工作，每个模板都有一个公共成员 type 来表示类型。这个类型将是与模板参数相关的，且这种关系由模板的名字表达。如果不能进行对应的转换，type 成员将返回模板参数类型本身。如 T 本身就是不是指针，那么 `remove_pointer<T>::type` 就是 T 本身。
+
 ### 16.2.4 函数指针和实参推断
+
+当使用函数模板来初始化或赋值函数指针时，编译器使用指针的类型来推断模板的实参。如：
+````cpp
+template <typename T>
+int compare(const T &, const T &);
+int (*pf1)(const int &, const int &) = compare;
+````
+pf1 的参数类型决定了 T 的模板实参类型，此处模板实参类型是 int，此时 pf1 指向 compare 的以 int 实例化的 compare 函数。如果模板实参不能从函数指针中推断出来，如：
+````cpp
+void func(int(*)(const string &, const string &));
+void func(int(*)(const int &, const int &));
+func(compare); // error: which instantiation of compare?
+````
+问题在于从 func 无法推断出 compare 的模板参数类型，可以通过显示指定模板实参，如：
+````cpp
+func(compare<int>); // passing compare(const int &, const int &)
+````
+当取函数模板实例的地址，上下文必须要让其能够让所有的模板参数（类型的或值的）可以被唯一推断。
+
 ### 16.2.5 模板实参推断和引用
+
+如果函数的参数是模板类型的引用，需要记住的是：常见的引用绑定规则依然有效（左值只能绑定到左值，右值只能绑定到右值）；并且此时 const 是底层 const 而不是顶层 const 。
+
+**左值引用函数参数的类型推断**
+
+当一个函数参数是模板类型参数的左值引用如：`T&`，绑定规则告诉我们只能传递左值过去，实参可以有 const 修饰，如果实参是 const 的，那么 T 将被推断为 const 类型。如：
+````cpp
+template <typename T> void f1(T&);
+f1(i); // i is an int; T is int
+f1(ci); // ci is a const int; T is const int
+f1(5); // error: argument to a & parameter must be an lvalue
+````
+如果一个函数参数是 `const T&` 的，那么绑定规则告诉我们可以传递任何类型（const 或非 const 对象、临时量或字面量）的实参过去。由于函数参数本身是 const 的，T 推断出来的类型将不在是 const 的了，因为，const 已经是函数参数类型的一部分；因而，它将不必在是模板参数的一部分。如：
+````cpp
+template <typename T> void f2(const T&); // can take an rvalue
+// parameter in f2 is const &; const in the argument is irrelevant
+// in each of these three calls, f2's function parameter is inferred as const int&
+// and T is int
+f2(i);
+f2(ci);
+f2(5);
+````
+
+**右值引用函数参数的类型推断**
+
+当函数参数是一个右值引用时，形如：`T&&`，绑定规则告诉我们可以传递右值给这个参数。当这样做时，类型推断表现的类似于给左值引用函数参数一样，给类型参数 T 推断出来的类型就是这个右值类型。如：
+````cpp
+template <typename T> void f3(T&&);
+f3(42); // argument is an rvalue of type int; template parameter T is int;
+````
+
+**Reference Collapsing（引用折叠） and Rvalue Reference Parameters**
+
+虽然语言不允许将右值绑定到左值引用上，但是语言允许将左值绑定到右值引用上。语言通过两点实现了这个特性，其一将影响如何从右值引用参数中推断出 T 的类型，当传递左值（i）给函数参数是模板类型参数的右值引用（`T&&`）时，编译器会将 T 推断为左值引用，所以 `f3(i)` 中，编译器将 T 推断为 `int&` 而不是 int 。将 T 推断为 int& 似乎意味着 f3 的函数参数是对类型 int& 的右值引用。然而，语言不允许直接定义引用的引用，却允许间接通过类型别名或模板类型参数来达到此目标。
+
+其二就是：如果间接创建了引用的引用，那么这些引用将被折叠（collapse），除了一个之外所有的折叠结果都是左值引用类型，新标准中将折叠规则扩展到了右值引用。只有右值引用的右值引用才会被折叠为右值引用。规则如下：
+
+- `X& &`, `X& &&` 和 `X&& &` 被折叠为类型 `X&`；
+- `X&& &&` 被折叠为 `X&&`；
+
+引用折叠只会发生于间接创建的引用的引用，比如在类型别名或模板参数时。
+
+结合引用折叠规则和右值引用参数的特殊类型推断规则，将使得 f3 可以对左值进行调用。如：
+````cpp
+f3(i); // template parameter T is int&, result in f3<int&>(int&)
+f3(ci); // template parameter T is const int&, result in f3<const int&>(const int&)
+````
+这导致了两个重要的结果：
+
+- 函数参数是模板类型参数的右值引用（`T&&`）可以被绑定到左值；
+- 如果其实参是左值，那么推断的模板实参类型将是左值引用类型，且函数参数将被实例化为一个左值引用参数；
+
+可以传递任何类型的实参给类型为 T&& 的函数参数，当传递左值时，函数参数将被实例化为左值引用 T& 。
+
+**书写函数参数是右值引用的模板函数**
+
+模板参数可以被推断为引用类型对模板内的代码具有惊人的影响。如：
+````cpp
+template <typename T> void f3(T&& val)
+{
+    T t = val;  // copy or binding a reference?
+    t = fcn(t); // does the assignment change only t or val and t?
+    if (val == t) { /* ... */ }  // always true if T is a reference type
+}
+````
+根据传递个实参是左值还是右值，会产生行为非常不同的代码。要保证这种代码正确工作是非常困难的。在现实中，右值引用参数只会被运用于以下两种情况：函数模板将其参数进行转发（forwarding）或者函数模板是重载的，这个将在后面介绍。这里可以先提前声明的是这种函数模板与参数是右值引用的常规函数一样可以进行重载。如：
+````cpp
+template <typename T> void f(T&&); // binds to nonconst rvalues (1)
+template <typename T> void f(const T&); // lvalues and const rvalues (2)
+````
+上面遵循十三章介绍过的右值引用函数参数的重载规则，所有的左值将优先选择函数 (2)，可修改的右值将优先选择函数 (1)。
+
 ### 16.2.6 理解 `std::move`
+
+库函数 move 就是使用右值引用很好的例子。标准库定义 move 函数如下：
+````cpp
+template <typename T>
+typename remove_reference<T>::type&& move(T&& t)
+{
+    return static_cast<remove_reference<T>::type&&>(t);
+}
+````
+代码简短而微妙，由于 move 的参数是模板类型参数的右值引用 T&&，通过引用折叠这个函数参数可以匹配任何类型的实参，特别是既可以传左值或者右值给 move，如：
+````cpp
+string s1("hi!"), s2;
+s2 = std::move(string("bye!")); // ok, moving from an rvalue
+s2 = std::move(s1); // ok, but after the assignment s1 has indeterminate value
+````
+需要注意的是，当传递左值过去时，`static_cast<string&&>(t)` 代码会将一个左值引用（string&）强转为右值引用（string&&） 。
+
+**`static_cast`将左值引用转为右值引用是允许的**
+
+虽然不能隐式将左值转为右值引用，但是可以使用 `static_cast` 将左值强制转为右值引用。将右值引用绑定到左值使得操作右值引用的代码可以攫取左值的内容。通过让程序员只能使用强制转换，语言允许这样的用法。而通过强制（forcing）这样做，语言避免了程序员无意中这样做。最后，虽然可以直接写强转表达式，更为简单的方式是使用 move 函数。而且，使用 move 函数将更容易查找这些想要攫取左值内容的代码。
+
 ### 16.2.7 Forwarding
+
+一些函数需要其一个或多个实参以类型保持完全不变的方式转发（forwarding）给另外一个函数。在这种情况下，我们需要保存转发实参的所有信息，包括实参是否为 const 或者实参是左值还是右值。
 
 ## 16.3 重载和模板
 
@@ -443,3 +677,5 @@ del(p); // no runtime overhead
 ## 16.5 模板特例化
 
 ## 关键术语
+
+<!--vim: formatoptions=croql :-->
