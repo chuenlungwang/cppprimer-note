@@ -395,8 +395,130 @@ typename T::value_type top(const T &c)
 
 **默认模板实参**
 
+与可以给函数参数提供默认实参一样，可以提供默认模板实参（default template arguments），在新标准下可以给函数和类模板提供默认实参。早期的语言版本只允许给类模板提供默认实参。如：
+````cpp
+template <typename T, typename F = less<T>>
+int compare(const T &v1, const T &v2, F f = F())
+{
+    if (f(v1, v2)) return -1;
+    if (f(v2, v1)) return 1;
+    return 0;
+}
+````
+这里同时提供了模板模板实参和模板函数实参。默认模板实参使用 less 函数对象的 T 类型实例，而默认函数参数告知 f 是 F 类型的默认初始化对象。使用 compare 时可以提供自己的比较操作，但不是必须这么做。如：
+````cpp
+bool i = compare(0, 42);
+Sales_data item1(cin), item2(cin);
+bool j = compare(item1, item2, compareIsbn);
+````
+当 compare 以三个实参进行调用时，第三个参数的必须是可调用对象，并且返回值可以转为 bool ，其参数类型必须与前两个参数的类型可以转换。与函数默认参数一样，模板参数的默认实参只有在其右侧的所有参数都具有默认实参时才是合法的。
+
+**模板默认实参和类模板**
+
+无论何时使用类模板，都必须在模板名之后跟随尖括号。尖括号表示类是从一个模板实例化而来的。特别是，如果一个类模板给所有模板参数都提供了默认实参，并且我们也希望使用这些默认值，还是必须得在模板名字后提供一个空的尖括号对。如：
+````cpp
+template <class T = int>
+class Numbers {
+public:
+    Numbers(T v = 0):val(v) { }
+private:
+    T val;
+};
+Numbers<long double> lots_of_precision;
+Numbers<> average_precision; //empty <> says we want the default type
+````
+
 ### 16.1.4 成员模板
+
+无论是常规的类还是类模板都可以有一个本身就是模板的成员函数，这种成员被称为成员模板（member templates），成员模板一定不能是虚函数。
+
+**常规类的成员模板**
+
+常规类中的成员模板与模板函数的写法完全一样。如：
+````cpp
+class DebugDelete {
+public:
+    DebugDelete(std::ostream &s = std::cerr):os(s) { }
+    template <typename T>
+    void operator()(T *p) const
+    {
+        os << "delete unique_ptr" << std::endl;
+        delete p;
+    }
+private:
+    std::ostream &os;
+};
+````
+成员模板与别的模板一样，都是从自己的模板参数列表开始的。每个 DebugDelete 对象有自己的 ostream 成员，并且有一个成员函数本身是模板。用法如下：
+````cpp
+double *p = new double;
+DebugDelete d;
+d(p);
+int *ip = new int;
+DebugDelete()(ip);
+````
+也可以被用于构建 `unique_ptr` 对象。如：
+````cpp
+unique_ptr<int, DebugDelete> p(new int, DebugDelete());
+unique_ptr<string, DebugDelete> sp(new string, DebugDelete());
+````
+以上当 `unique_ptr` 的析构函数被调用时，DebugDelete 的调用操作符将会被调用。因而，无论何时 `unique_ptr` 的析构函数被实例化，DebugDelete 的调用操作符将被实例化。
+
+**类模板的成员模板**
+
+可以给类模板定义成员模板，在这种情况下，类和成员的模板参数是各自独立的。如：
+````cpp
+template <typename T> class Blob {
+    template <typename It> Blob(It b, It e);
+};
+````
+此构造函数有其自己的模板类型参数 It 。不同于类模板的常规成员函数，成员模板是函数模板。当在类模板外部定义成员模板时，必须提供同时为类模板和函数模板提供模板参数列表。先提供类模板的参数列表，紧跟着成员模板自己的模板参数列表。如：
+````cpp
+template <typename T>
+template <typename It>
+Blob<T>::Blob(It b, It e):data(std::make_shared<std::vector<T>>(b, e)) { }
+````
+
+**初始化和成员模板**
+
+为了实例化类模板的成员模板，必须同时给类和函数模板同时提供模板参数。与往常一样，类模板的实参必须显式提供，而成员模板的实参则从函数调用中推断出来。如：
+````cpp
+int ia[] = {0,1,2,3,4,5,6,7,8,9};
+vector<long> vi = {0,1,2,3,4,5,6,7,8,9};
+list<const char*> w = {"now", "is", "the", "time"};
+Blob<int> a1(begin(ia), end(ia));
+Blob<int> a2(vi.begin(), vi,end());
+Blob<string> a3(w.begin(), w.end());
+````
+当定义 a1 时，显式告知编译器去实例化模板参数绑定到 int 的 Blob 版本。而其构造函数自己的类型参数则从 begin(ia) 中推断出来，在此例是 `int*`。因此，a1 的实例定义是：
+````cpp
+Blob<int>::Blob(int*, int*);
+````
+
 ### 16.1.5 控制实例化
+
+模板只有在使用时才会生成实例意味着同一个实例可能会出现在多个 obj 文件中。当两个或多个分离编译的源文件使用同一个模板且模板实参是一样的，那么在每个文件中都由一个此模板的相同实例。
+
+在大的系统中，在多个文件中过度实例化同一个模板造成的影响将是很大的。在新标准中，可以通过显式实例化（explicit instantiation）来避免这个消耗。显式实例化的形式如下：
+````cpp
+extern template declaration; //instantiation declaration
+template declaration; //instantiation definition
+````
+显式实例化的声明或定义之前，必须要能够看到模板体的代码。其中 declaration 是将所有的模板参数替换为模板实参，如：
+````cpp
+extern template class Blob<string>; //declaration
+template int compare(const int &, const int &); //definition
+````
+当编译器看到 extern 模板声明时，它将不会生成在当前文件中生成实例代码。extern 声明意味着在程序的某个地方存在着一个非 extern 的实例，程序中可以有多个 extern 声明，但是只能有一个定义。
+
+由于当使用模板时会自动实例化，所以 extern 声明必须出现在所有使用此实例的代码之前。
+
+函数模板必须被显式实例化，而类模板不一定需要，编译器会隐式实例化类模板。这个特性可能是编译器自己的特性，所以不应依赖于此。最好是对于每个实例声明都对应一个显式地实例定义。
+
+**实例定义实例化所有成员**
+
+类模板的实例定义实例化模板的所有成员，包括内联成员函数。当编译器看到一个实例定义时，它无法直到到底哪个成员函数将会程序使用，因此，于常规的类模板实例化不同的是，编译器将实例化类的所有成员。即便不使用某个成员，其也必须实例化。结果就是，我们只能显式实例化所有成员都可以使用的模板实例。
+
 ### 16.1.6 效率和灵活性
 
 智能指针类型提供了描述模板设计者的设计选择很好的材料。`shared_ptr` 可以在创建或 reset 指针时传递一个删除器（deleter）来轻松覆盖之前的。而 `unique_ptr` 的删除器却是类型的一部分，我们必须在定义 `unique_ptr` 就显式提供一个类型作为模板实参，因而，给 `unique_ptr` 定制删除器会更加复杂。 
