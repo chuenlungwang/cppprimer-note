@@ -856,13 +856,169 @@ void flip(F f, T1 &&t1, T2 &&t2)
 
 函数模板可以被别的模板或非模板函数重载。与往常一样，同名的函数必须在参数的数目或类型上有所差异。由于函数模板的出现导致的函数匹配的差异将表现在以下几个方面：
 
+- 一个调用的候选函数（candidate function）包括所有模板实参推断成功的函数模板实例；
+- 候选函数模板实例讲总是可行函数（viable function），这是由于模板实参推断会排除所有不可行的模板；
+- 与往常一样，可行函数事按照需要进行的转型进行排序的，对于函数模板来说这种转型是非常有限的；
+- 与往常一样，如果一个函数比其它函数提供了更优的匹配，此函数将被选中。然而，如果有好几个函数提供了一样好的匹配，那么：
+    * 如果其中有一个非模板函数，那么这个非模板函数将被调用；
+    * 如果没有非模板函数，但是多个函数模板中其中一个更加特化（specialized），那么这个更特化的函数模板将被调用；
+    * 否则，调用是模糊的（ambiguous）；
+
+为了正确定义重载的函数模板需要对类型之间的关系以及模板函数的有限转型有一个良好的理解；
+
+**书写重载模板**
+
+如下两个函数是重载的模板，如：
+````cpp
+template <typename T> string debug_rep(const T &t)
+{
+    ostringstream ret;
+    ret << t;
+    return ret.str();
+}
+
+template <typename T> string debug_rep(T *p)
+{
+    ostringstream ret;
+    ret << "pointer: " << p;
+    if (p)
+        ret << " " << debug_rep(*p);
+    else
+        ret << " null pointer";
+}
+````
+如果调用：`string s("hi"); cout << debug_rep(s) << endl;` 将只调用第一个函数 `debug_rep` 函数。如果以 `cout << debug_rep(&s) << endl;` 进行调用则两个模板函数都是可行的实例。第一个是 `debug_rep(const string* &)` 其中 T 被推断为 `string*`；第二个是 `debug_rep(string*);` 其 T 被推断为 string ；
+
+然而第二个是精确匹配这个调用，第一个却需要将指针转为 const 的，函数匹配将更加青睐于第二个模板。
+
+**多个可行模板**
+
+考虑以下调用：
+````cpp
+const string *sp = &s;
+cout << debug_rep(sp) << endl;
+````
+这里两个模板都是可行的而且是精确匹配的。第一个将被实例化为 `debug_rep(const string* &)`，其 T 将绑定到 `string*`；第二个将被实例化为 `debug_rep(const string*)` 其 T 将绑定到 `const string` 上。此时常规的函数匹配将无法区别哪一个调用是更优的。然而，由于新加的关于模板的规则，将调用 `debug_rep(T*)` 函数，这个函数是更加特化的模板。原因在于，如果没有这个规则，将没有任何方法在这种情况下以 const 指针调用指针版本的 `debug_rep`。问题在于，`debug_rep(const T&)` 可以在任何类型上调用，包括指针类型。而 `debug_rep(T*)` 则只能在指针左值上调用，显然是更为特化的版本。
+
+当多个重载版本的模板提供一样优秀的函数调用匹配，最特化的版本将胜出。
+
+**非模板和模板之间的重载**
+
+考虑非模板版本的 `debug_rep` 函数：
+````cpp
+string debug_rep(const string &s)
+{
+    return '"' + s + '"';
+}
+````
+以及调用：
+````cpp
+string s("hi");
+cout << debug_rep(s) << endl;
+````
+此时将有两个一样优秀的函数匹配：`debug_rep<string>(const string&)` 其 T 绑定到 string，以及这里定义的非模板函数。此时编译器将选择非模板版本。这是由于同样的原因，即最特化的将会被选择，非模板函数是比模板版本更加特化的。
+
+需要注意的是在使用任何重载的函数时记得将这些函数（包括模板函数与非模板函数）在同一个头文件中进行声明。这样在进行函数匹配时编译器可以进行完全的考虑，而不至于忽略任何一个。
+
 ## 16.4 可变参数模板
+
+可变参数模板（variadic template）是新加的一种函数模板或类模板，这种模板可以接收可变数量的模板参数。这种可变参数被称为参数包（parameter pack）。语言允许两种参数包：模板参数包（template parameter pack）表示 0 或多个模板参数，以及函数参数包（function parameter pack）表示 0 个或多个函数参数。
+
+语言使用省略号（ellipsis）来表示模板或函数参数包。对于模板参数列表，`class...` 或 `typename...` 表示接下的参数表示一系列 0 个或多个类型；省略号后的名字表示其参数包的任何类型的名字。在函数参数列表中，如果一个参数的类型是一个模板参数包，那么它就是一个函数参数包。如：
+````cpp
+// Args is a template parameter pack; rest is a function parameter pack
+template <typename T, typename... Args>
+void foo(const T &t, const Args& ... rest);
+````
+将 foo 声明为一个可变函数，其中一个类型参数是 T，以及一个模板参数包是 Args，这个参数包表示 0 个或多个额外的类型参数。函数参数列表则有一个参数，其类型是 `const T&`，以及一个函数参数包 rest，这个参数包表示 0 个或多个函数参数。
+
+与之前一样，编译器从函数实参中推断模板参数类型。对于可变模板，编译器还会推断参数包中的数量，如：
+````cpp
+int i = 0; double d = 3.14; string s= "how now brown cow";
+foo(i, s, 42, d); // three parameters in the pack
+foo(s, 42, "hi"); // two parameters in the pack
+foo(d, s); // one parameter in the pack
+foo("hi"); // empty pack
+````
+编译器将会实例化 4 个不同的 foo 实例：
+````cpp
+void foo(const int&, const string&, const int&, const double&);
+void foo(const string&, const int&, const char[3]&);
+void foo(const double&, const string&);
+void foo(const char[3]&);
+````
+
+**sizeof... 操作符**
+
+当希望知道参数包中有多少个元素时，可以使用 `sizeof...` 操作符，与 sizeof 一样，其返回一个常量表达式并且不会对其实参进行求值：
+````cpp
+template <typename... Args> void g(Args... args) {
+    cout << sizeof...(Args) << endl;
+    cout << sizeof...(args) << endl;
+}
+````
+
 ### 16.4.1 书写可变参数函数模板
+
+在前面用过 `initializer_list` 来定义函数可以接收不定数目的实参，但是这种实参必须是相同的类型，或者类型可以转为相同的类型。不定参数函数被用于及不知道实参的数目也不知道实参的类型。
+
+不定参数函数将总是递归的，第一个调用处理包中的第一个实参，并以后面的实参调用其自身。如：
+````cpp
+template <typename T>
+ostream &print(ostream &os, const T &t)
+{
+    return os << t;
+}
+
+// this version of print will be called for all but the last element
+// in the pack
+template <typename T, typename... Args>
+ostream &print(ostream &os, const T &t, const Args&... rest)
+{
+    os << t << ", ";
+    return print(os, rest...);
+}
+````
+参数包可以是一个空包。
+
 ### 16.4.2 包扩展（Pack Expansion）
+
+除了获取包的大小，另外一件可以做的事是对参数进行展开。当展开包时，可以提供一个模式（pattern）给它使用在每个展开的元素上。展开一个包将使得所有元素称为连续的逗号分隔的列表，并且将模式运用于每个元素上。使用省略号来进行包扩展。如 print 函数就有两个扩展。
+
+第一个扩展将模板参数包进行扩展并产生了 print 的函数参数列表，第二个扩展发生在函数体内调用 print 处，这次将产生一个调用 print 的函数实参列表。
+
+Args 的扩展运用 const Args& 模式给每个 Args 模板参数包中的元素，扩展的结果是一个逗号分隔的 0 个或多个参数类型，每个的类型都是 const T & 。
+
+**理解包扩展**
+
+函数参数包扩展可以运用更为复杂的模式，如：
+````cpp
+template <typename... Args>
+ostream &errorMsg(ostream &os, const Args&...rest)
+{
+    return print(os, debug_rep(rest)...);
+}
+````
+此调用 print 将运用模式 `debug_rep(rest)` ，将对函数参数包 rest 的每个元素调用 `debug_rep` 扩展的结果将是逗号分隔的一列 `debug_rep` 函数调用。
+
 ### 16.4.3 转发参数包（Forwarding Parameter Packs）
+
+在新标准下，可以将 forward 与可变参数模板一起使用从而让函数在不改变其实参的任何类型信息的情况下转发给其它函数。如：
+````cpp
+template <class... Args>
+inline
+void StrVec::emplace_back(Args&&... args)
+{
+    chk_n_alloc();
+    alloc.construct(first_free++, std::forward<Args>(args)...);
+}
+````
+其中 `std::forwad<Args>(args)...` 将同时扩展模板参数包 Args 和函数参数包 args 。如：`svec.emplace_back(10, 'c')` 将被扩展为 `std::forward<int>(10), std::forward<char>(c)`。
+
+实践中绝大多数的可变参数参数都将其参数转发给其它函数，就如 `emplace_back` 函数一样。
 
 ## 16.5 模板特例化
 
 ## 关键术语
 
-<!--vim: formatoptions=croql :-->
+<!--vim: :formatoptions=croql :wrap :-->
