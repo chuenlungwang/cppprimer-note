@@ -665,9 +665,74 @@ s2 = std::move(s1); // ok, but after the assignment s1 has indeterminate value
 
 ### 16.2.7 Forwarding
 
-一些函数需要其一个或多个实参以类型保持完全不变的方式转发（forwarding）给另外一个函数。在这种情况下，我们需要保存转发实参的所有信息，包括实参是否为 const 或者实参是左值还是右值。
+一些函数需要其一个或多个实参以类型保持完全不变的方式转发（forwarding）给另外一个函数。在这种情况下，我们需要保存转发实参的所有信息，包括实参是否为 const 或者实参是左值还是右值。如以下函数：
+````cpp
+// template that takes a callable and two parameters
+// and calls the given callable with the parameters "flipped"
+// flip1 is an incomplete implementation: top-level const and references are lost
+template <typename F, typename T1, typename T2>
+void flip1(F f, T1 t1, T2 t2)
+{
+    f(t2, t1);
+}
+````
+这个函数将在传给 flip1 一个其参数是引用类型的函数 f 之前工作完全正常。如以下将无法正常工作：
+````cpp
+void f(int v1, int &v2) // note v2 is a reference
+{
+    cout << v1 << " " << ++v2 << endl;
+}
+````
+如果以此函数去调用 flip1 函数，那么 f 将不能改变原始参数，改变的将是被复制的参数。为了达到转发的目的非得将 flip1 的参数改成右值引用形式，只有这样才能保持参数的类型信息。通过将其参数定义为模板类型参数的右值引用（T&&）来保持实参的整个类型信息（引用以及 const 性质）。通过将参数定义为引用可以保持参数的 const 性质，这是因为 const 在引用类型中是底层的。通过引用折叠，如果将函数参数定义为 T1&& 或 T2 &&，将可以保留 flip1 函数实参的左值/右值属性。修改代码如下：
+````cpp
+template <typename F, typename T1, typename T2>
+void flip2(F f, T1 &&t1, T2 &&t2)
+{
+    f(t2, t1);
+}
+````
+这个版本的 flip2 只解决了问题的一般，flip2 函数可以调用以左值引用为参数的函数，但是对以右值引用为参数的函数就无能为力了。如：
+````cpp
+void g(int &&i, int &j)
+{
+    cout << i << " " << j << endl;
+}
+flip2(g, i, 42); // error: can't initialize int&& from an lvalue
+````
+原因在于任何函数参数与变量都是左值，即便其初始值是右值。因而，在 flip2 中调用 g 将传递左值给 g 的右值引用参数。解决的办法自然是使用 `std::forward` 标准函数来保留原始实参的全部类型信息，与 move 一样，forward 定义在 utility 头文件中。forward 在调用时必须传递一个显式的模板实参，forward 将返回显式实参类型的右值引用。意味着 `forward<T>` 的返回类型是 T&& 。forward 的实现如下：
+````cppp
+// Sample implementation of std::forward
+// For lvalues (T is T&), take/return lvalue refs.
+// For rvalues (T is T), take/return rvalue refs.
+template <typename T>
+T&& forward(T &&param)
+{
+    return static_cast<T&&>(param);
+}
+````
+通常 forward 被用于给传递一个定义为模板类型参数的右值引用的函数参数。通过对其返回类型进行引用折叠，forward 保留了其给定实参的左值/右值属性，如：
+````cpp
+template <typename Type> void intermediary(Type &&arg)
+{
+    finalFcn(std::forward<Type>(arg));
+}
+````
+此处使用它 Type 作为 forward 的显式模板类型参数，由于 arg 是模板类型参数的右值引用，Type 将表示传递给 arg 的实参的所有类型信息。如果 arg 的实参是一个右值，那么 Type 将是非引用类型，则 `forward<Type>` 将返回 Type&& ；如果 arg 的实参是左值，那么通过引用折叠规则，Type 本身就是左值引用类型，则 `forward<Type>` 的返回类型将是左值引用的右值引用，通过引用折叠最终的返回类型将是左值引用。
+
+通过在类型为模板类型参数的右值引用（T&&）的函数参数调用 forward 标准函数，将保持函数实参的所有类型细节。
+
+使用 forward 来重写 flip 函数：
+````cpp
+template <typename F, typename T1, typename T2>
+void flip(F f, T1 &&t1, T2 &&t2)
+{
+    f(std::forward<T2>(t2), std::forward<T1>(t1));
+}
+````
 
 ## 16.3 重载和模板
+
+函数模板可以被别的模板或非模板函数重载。与往常一样，同名的函数必须在参数的数目或类型上有所差异。由于函数模板的出现导致的函数匹配的差异将表现在以下几个方面：
 
 ## 16.4 可变参数模板
 ### 16.4.1 书写可变参数函数模板
