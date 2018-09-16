@@ -1017,8 +1017,121 @@ void StrVec::emplace_back(Args&&... args)
 
 实践中绝大多数的可变参数参数都将其参数转发给其它函数，就如 `emplace_back` 函数一样。
 
-## 16.5 模板特例化
+## 16.5 模板特例（Template Sepcializations）
+
+一个模板并不总是能满足可以所有使其实例化的模板实参的要求。在某些情况下，通用的模板定义还可能是错误的：通用的定义可能无法编译或者做错误的事情。在某些情况下，可以利用特定类型的知识来写出更加有针对性且高效的代码（至少比从模板中实例化更加高效）。当不想或者不能使用模板版本时，可以定义一个类或函数模板的特例化版本。如：
+````cpp
+template <typename T> int compare(const T &, const T &);  // (1)
+
+template <size_t N, size_t M>
+int compare(const char(&)[N], const char(&)[M]);  // (2)
+````
+以上两个函数，(2) 函数只能对数组或字符串字面量进行调用，如果传入了字符指针，那么总是 (1) 函数被调用。这在有时并不是想要的结果。如：
+````cpp
+const char *p1 = "hi", *p2 = "mom";
+compare(p1, p2); // calls (1) template
+compare("hi" "mom"); // calls (2) template
+````
+为了处理字符指针的清醒，需要给 (1) 模板定义特例（template specialization）。特例是模板的另外一个定义，其中一个或多个目标那参数具有特定的类型。
+
+**定义函数模板特例**
+
+当定义函数模板特例时，需要给原模板中所有的模板参数提供实参。为了表示我们的确是在特例化一个模板，需要使用关键字 tempalte 后跟随一个空的尖括号 `<>` ，空的尖括号表示给原模板中的所有模板参数都提供了实参。如：
+````cpp
+template <>
+int comapre(const char* const &p1, const char* const &p2)  // (3)
+{
+    return strcmp(p1, p2);
+}
+````
+这里最难理解的部分就是特例中的函数参数类型必须与模板中的对应类型一样，这里对应的是 (1) 函数，与类型别名一样，当模板参数类型与指针、const 混杂在一起时也会变得复杂。此处 T 的类型时 const char* 即指向 const 对象的指针。
+
+**函数重载 vs 模板特例**
+
+当定义函数模板特例时，我们是在抢编译器的工作。就是说我们给原始模板的特定实例提供我们自己的定义。这里特别需要留意的是特例是一个实例；它不是重载；由于特例实例化一个模板；它不重载这个模板，因而，特例不会影响函数匹配过程。
+
+如果将模板特例定义为独立的非模板函数将会影响函数匹配。如 `compare("hi", "mom")` 如果在将 (3) 定义为模板特例时，选择的依然是 (2) 函数，原因是它更加的特化（specialized）而 (3) 是不参与函数匹配的，而如果将 (3) 定义为接受指针的非模板函数，此时 (3) 将参与函数匹配并且将选择 (3) ，原因是非模板函数是最特化的版本。
+
+为了定义个模板的特例，原始模板必须被声明在作用域内。并且，在任何使用模板实例的代码之前必须特例的声明必须在作用域内，如果不这么做的话就很可能会从模板中实例化出一个与要求不符合的函数，这种错误通常是很难定位的。
+
+模板和它的特例应该定义在同一个头文件中，而且同一个名字的所有模板都应该出现在前面，后面跟随这些模板的特例。
+
+**类模板特例**
+
+参考代码：[template_specialization.cc](https://github.com/chuenlungwang/cppprimer-note/blob/master/code/template_specialization.cc)
+
+`hash<Sales_data>` 以 `template<>` 开始用于表示我们定义一个完全的模板特例。在特例中只需要定义需要另行定义的成员函数，可以将特例的成员函数定义在类内或者类外。
+
+**类模板部分特例**
+
+与函数模板不同的是，类模板特例不用必须提供所有的模板参数实参。可以指定其中一些但不是全部的模板参数（或者参数的某个方面，如：左值引用或右值引用性质）。一个类模板的部分特例（partial specialization）本身是一个模板。用户必须给特例没有固定的模板参数提供实参。
+
+只能部分特化一个类模板，但不能部分特化函数模板。
+
+部分特化的一个很好的例子是 `remove_reference` 类，实现如下：
+````cpp
+// original, most general template
+template <class T> struct remove_reference {
+    typedef T type;
+};
+// partial specializations that will be used for lvalue and rvalue references
+template <class T> struct remove_reference<T&>
+{ typedef T type; } // lvalue references
+
+template <class T> struct remove_reference<T&&>
+{ typedef T type; } // rvalue references
+````
+
+该模板的第一个定义是最通用的一个版本，可以实例化任何一个类型。它使用模板实参作为成员类型 type 的类型。后面的两个类是原始模板的部分特例。由于部分特例也是一个模板，所以需要先定义模板参数，与别的特例一样，部分特例具有与其进行特化的模板一样的名字，特例的模板参数列表包含所有类型没有完全固定的模板参数，在类名之后的尖括号中是特例所指定的模板实参，这些实参与原始模板中的参数在位置上一一对应。
+
+部分特例的模板参数列表是原始模板参数列表的一个子集，在此例中，特例具有与原始模板相同数目的模板参数，然而，特例中的参数类型却与原始模板不一样，特例分别使用了左值引用或右值引用类型。以下是一些使用场景：
+````cpp
+int i;
+remove_reference<decltype(42)>::type a;
+remove_reference<decltype(i)>::type b;
+remove_reference<decltype(std::move(i))>::type c;
+````
+
+**仅仅特化成员而不是整个类**
+
+相比于特化整个模板，可以只特化特定的成员函数。如：
+````cpp
+template <typename T> struct Foo {
+    Foo(const T &t = T()) : mem(t) { }
+    void Bar() { /* ... */}
+    T mem;
+};
+template <>
+void Foo<int>::Bar()
+{
+    // do whatever specialized processing that applies to ints
+}
+````
+此例中仅特化一个 `Foo<int>` 的一个成员 Bar，`Foo<int>` 的其他成员将由 Foo 模板提供。如：
+````cpp
+Foo<string> fs; // instantiates Foo<string>::Foo()
+fs.Bar(); // instantiates Foo<string>::Bar()
+Foo<int> fi; // instantiates Foo<int>::Foo()
+fi.Bar(); // uses our specialization of Foo<int>::Bar()
+````
+当将 Foo 运用于任何类型而不是 int 时，成员照旧进行实例化，而当将 Foo 运用 int 时，除了 Bar 之外的成员照旧进行实例化，只有 Bar 将会使用特化的版本。
 
 ## 关键术语
+
+- 类模板（class template）：可以实例化类的模板定义，其定义形式是使用 template 关键字后跟随逗号分割的一个或多个模板参数，这些参数都放在了尖括号中，后面跟随一个类定义；
+- 默认模板实参（default template arguments）：当用户不提供对应的模板实参时，模板将使用的类型或值；
+- 显式实例（explicit instantiation）：为模板参数提供了所有显式实参的声明，用于指导实例化过程。如果一个声明是 extern 的，模板将不会被实例化；否则，模板将使用这个指定的实参进行实例化。对于任何一个 extern 模板定义，必须有另外一个非 extern 的显式模板实例；
+- 显式模板实参（explicit template argument）：当定义一个模板类类型或调用函数时由用户提供的模板实参。显式模板实参将放在模板名字之后的尖括号中；
+- 函数参数包（function parameter pack）：参数包表示 0 个或多个函数参数；
+- 函数模板（function template）：可以从中实例化特定函数的模板定义，函数模板的定义将使用 template 关键字后跟随放置于尖括号中的用逗号分割的一个或多个模板参数，后再跟随函数定义；
+- 实例化（instantiate）：用模板实参产生模板的一个特定实例的编译器过程，其中模板实参将替换模板参数。函数通过调用中的实参自动进行实例化，类模板则通过显式提供模板实参来实例化；
+- 成员模板（member template）：本身是模板的成员函数，成员模板不是虚函数；
+- 非类型参数（nontype parameter）：表示一个值的模板参数，非类型模板参数的模板实参必须是一个常量表达式；
+- 包扩展（pack expansion）：一个参数包被替换为对应的元素列表的过程；
+- 参数包（parameter pack）：模板或函数参数，其表示 0 个或多个参数；
+- 部分特例（partial specialization）：类模板的一个版本，其中一些但不是全部的模板参数被指定（specified）或完全指定（completely specified）；
+- 模式（pattern）：定义了扩展参数包时运用于每个元素的动作；
+- 类型转发（type transformation）：由库定义的类模板，将其模板类型参数转发给相关的类型；
+- 类型参数（type parameter）：在模板参数列表中用于表示一个类型的名字；
 
 <!--vim: :formatoptions=croql :wrap :-->
