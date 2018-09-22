@@ -1,7 +1,7 @@
 
 .PHONY : all clean
 
-EXECUTABLES := noexcept array constexpr_class
+EXECUTABLES := noexcept array constexpr_class namespace_class
 BUILD_PATH = build
 
 all : \
