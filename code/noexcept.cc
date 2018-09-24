@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
     void (*pf1)(int) noexcept = recoup;
     (*pf1)(100);
     void (*pf2)(int) = recoup;
-    pf1 = alloc;
+    //pf1 = alloc;
     pf2 = alloc;
     (*pf2)(20);
 

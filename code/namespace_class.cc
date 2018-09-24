@@ -30,8 +30,8 @@ class Bulk_item : public NS::Quote {  };
 ////////////////////////////////////////////////
 
 namespace NS {
-    print(int) {}
-    print(double) {}
+    void print(int) {}
+    void print(double) {}
 }
 
 /////////////////////////////////////////////////
