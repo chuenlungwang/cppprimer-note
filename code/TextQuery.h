@@ -14,6 +14,7 @@ class QueryResult;
 
 class TextQuery {
 public:
+    class QueryResult;
     using line_no = std::vector<std::string>::size_type;
     explicit TextQuery(std::ifstream &);
 public:
@@ -23,11 +24,11 @@ private:
     std::map<std::string, std::shared_ptr<std::set<line_no>>> wm;
 };
 
-class QueryResult {
+class TextQuery::QueryResult {
 friend std::ostream& print(std::ostream&, const QueryResult&);
 public:
     QueryResult(std::string s,
-                std::shared_ptr<std::set<TextQuery::line_no>> p,
+                std::shared_ptr<std::set<line_no>> p,
                 std::shared_ptr<std::vector<std::string>> f)
         : sought(s),
           lines(p),
@@ -35,7 +36,7 @@ public:
     {}
 private:
     std::string sought;
-    std::shared_ptr<std::set<TextQuery::line_no>> lines;
+    std::shared_ptr<std::set<line_no>> lines;
     std::shared_ptr<std::vector<std::string>> file;
 };
 

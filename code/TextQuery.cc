@@ -26,7 +26,7 @@ TextQuery::TextQuery(std::ifstream &in) : file(new std::vector<std::string>)
     }
 }
 
-QueryResult
+TextQuery::QueryResult
 TextQuery::query(const std::string &word) const
 {
     static std::shared_ptr<std::set<line_no>> nodata(new std::set<line_no>{});
@@ -43,7 +43,7 @@ make_plural(size_t ctr, const std::string &word, const std::string &ending)
     return (ctr<=1)?word:word+ending;
 }
 
-std::ostream& print(std::ostream &os, const QueryResult &qr)
+std::ostream& print(std::ostream &os, const TextQuery::QueryResult &qr)
 {
     os << qr.sought << " occurs " << qr.lines->size() << " "
         << make_plural(qr.lines->size(), "time", "s") << std::endl;
