@@ -2,7 +2,12 @@
 .PHONY : all clean
 
 EXECUTABLES := noexcept array constexpr_class namespace_class \
-	multiple_inheritance
+	multiple_inheritance \
+	typeinfo \
+	RTTI \
+	class_member_pointer \
+	function_table \
+	union_class
 
 BUILD_PATH = build
 
