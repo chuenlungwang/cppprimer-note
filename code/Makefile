@@ -7,7 +7,8 @@ EXECUTABLES := noexcept array constexpr_class namespace_class \
 	RTTI \
 	class_member_pointer \
 	function_table \
-	union_class
+	union_class \
+	local_class
 
 BUILD_PATH = build
 
