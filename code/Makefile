@@ -8,7 +8,8 @@ EXECUTABLES := noexcept array constexpr_class namespace_class \
 	class_member_pointer \
 	function_table \
 	union_class \
-	local_class
+	local_class \
+	union
 
 BUILD_PATH = build
 
