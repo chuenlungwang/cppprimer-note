@@ -3,6 +3,13 @@
 #include <vector>
 #include <string>
 
+// Explicit instantiation of std::string needed, otherwise
+// we get a liner error with clang on osx thats a bug in libc++
+// because of interaction with
+// __attribute__ ((__visibility__("hidden"), __always_inline__)) in std::string
+// Without this line, &std::string::empty will be in error of 'undefined symbols'
+template class std::basic_string<char>;
+
 class Screen {
 public:
     using Action = Screen& (Screen::*) ();
