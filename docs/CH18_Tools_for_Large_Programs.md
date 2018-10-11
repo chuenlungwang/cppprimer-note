@@ -153,7 +153,63 @@ void f() noexcept
 
 ## 18.3 多重继承和虚继承
 
+C++ 是可以多重继承的（Multiple inheritance），意味着一个派生类可以多个直接基类。多重派生类（multiply derived class）继承其所有的父类的属性。尽管在概念上很简单，但是在细节上涉及到多个直接基类的时候会在设计层面和实现层面遇到许多问题。
+
 ### 18.3.1 多重继承
+
+多重继承的派生列表会包含多个基类。如：
+````cpp
+class Panda : public Bear, public Endangered { /* ... */ }
+````
+每个基类都有一个可选的访问说明符，如果省略的话就提供默认的说明符，对于 class 是 private，对于 struct 是 public。与单一继承一样，派生列表中的类必须是已经定义的，并且不能是 final 的。语言并没有限制具体可以在派生列表中包含多少个类。每个基类只能在派生列表中出现一次。
+
+**多重派生类从每个基类中继承状态**
+
+在多重继承下，一个派生类对象将包含所有基类的子对象。如：Panda 类中包含了 Bear 和 Endangered 子对象，以及它自身定义的成员。
+
+**派生构造函数需要初始化所有基类**
+
+构建派生类对象需要构建和初始化其所有的直接基类子对象。如：
+````cpp
+Panda::Panda(std::string name, bool onExhibit)
+    : Bear(name, onExhibit, "Panda"),
+      Endangered(Endangered::critical) { }
+// 以下意味着 Bear 对象是默认初始化的
+Panda::Panda()
+    : Endangered(Endangered::critical) { }
+````
+构造函数的初始化列表负责初始化所有的直接基类，可将参数传递个直接基类的构造函数作为实参。直接基类的初始化顺序它们出现在派生列表中的顺序。
+
+**继承构造函数和多重继承**
+
+在新标准下，可以用 using 声明的方式从一个或多个基类中继承构造函数，如果从多个基类中继承具有相同的签名的构造函数将导致编译错误。如果发生了这样的情况需要派生类重新定义此构造函数。如：
+````cpp
+struct Base1 {
+    Base1() = default;
+    Base1(const std::string&);
+    Base1(std::shared_ptr<int>);
+};
+struct Base2 {
+    Base2() = default;
+    Base2(const std::string&);
+    Base2(int);
+};
+struct D1 : public Base1, public Base2 {
+    using Base1::Base1;
+    using Base2::Base2;
+    // D1 must define its own constructor
+    D1(const std::string &s) : Base1(s), Base2(s) {}
+    // needed once D1 defines its own constructor
+    D1() = default;
+};
+````
+
+**析构函数和多重继承**
+
+多重继承的析构函数与单一继承的析构函数没有什么不同。析构函数本身只需要负责它自己的资源的释放，成员和基类的资源都由他们各自释放。如果没有定义析构函数，编译器会自动合成一个，其函数体依然是空的。析构的顺序与构造的顺序刚好是完全相反的，所以将先调用成员的析构函数（属于最底层的派生类），再依次以派生列表的相反顺序调用基类的析构函数。
+
+**多重派生类的拷贝和移动操作**
+
 ### 18.3.2 转换和多基类
 ### 18.3.3 多重继承下的类作用域
 ### 18.3.4 虚继承
