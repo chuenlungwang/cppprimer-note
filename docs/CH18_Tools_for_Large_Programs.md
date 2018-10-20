@@ -527,4 +527,47 @@ Panda 对象中就只有一个 ZooAnimal 子对象了。
 
 ### 18.3.5 构造函数和虚继承
 
+在虚继承中，虚基类是由最后面的派生构造函数进行初始化，否则的话虚基类就可能在所有路径中被初始化，从而导致初始化多次。当继承体系中派生类如果可以独立被创建的话，它的构造函数也是最后面的派生构造函数，此时它也需要对虚基类进行初始化。在这种情况下将由最底层的派生类构造函数首先对虚基类子对象进行初始化，后面遇到的初始化虚基类子对象将会被忽略。然后再按照正常的派生列表顺序进行初始化其它基类。如：
+````cpp
+Panda::Panda(std::string name, bool onExhibit) :
+ZooAnimal(name, onExhibit, "Panda"),
+Bear(name, onExhibit),
+Raccoon(name, onExhibit),
+Endangered(Endangered::critical)
+{}
+````
+
+虚基类总是在非虚基类前被初始化，而不管它们出现在继承层级的哪个位置。
+
+**构造和析构顺序**
+
+如果一个类有多个虚基类，那么其顺序将按照出现在派生列表中的顺序进行初始化。如：
+````cpp
+class Character {};
+class BookCharacter : public Character {};
+class ToyAnimal {};
+class TeddyBear : public BookCharacter,
+    public Bear, public virtual ToyAnimal {};
+````
+将按照如下顺序进行初始化：
+````cpp
+ZooAnimal();  // Bear 的虚基类
+ToyAnimal();  // 直接虚基类
+Character();
+BookCharacter();
+Bear();
+TeddyBear();
+````
+对于拷贝和移动构造函数来说其顺序是一样的，合成的赋值操作符则是按照此顺序进行赋值的。而析构函数则以此反方向执行。
+
 ## 关键术语
+
+- 构建顺序（constructor order）：在非虚继承的情况下，基类按照出现在派生列表中的顺序进行执行。在虚继承的情况下，虚基类将首先被构建，它们之间是按照出现在派生列表中的顺序进行构建的。只有最底层的派生类可以初始化这个虚基类子对象；出现在中间层次的类对其初始化的运算将会被忽略；
+- 异常对象（exception object）：用于 throw 和 catch 之间进行通讯的对象。此对象在 throw 时创建，是抛出表达式的拷贝，异常对象将存在直到匹配的处理器执行完，对象类型是抛出表达式的静态类型。
+- 函数 try 块（function try block）：使用来捕获构造初始化器中的异常。 try 关键字出现在开始初始化列表的冒号之前，并且 catch 子句出现在函数体的后面；
+- 内联名称空间（inline namespace）：在名称空间前加上 inline，成员将被放在外围的名称空间中；
+- 名称空间（namespace）：将库中的名字收集到一个单一作用域的机制，与其它的 C++ 作用域不一样，名称空间可以被定义几个分离的地方；
+- noexcept 操作符：这个操作符返回一个 bool 来指示一个表达式是否会抛出异常，表达式本身不会被求值。结果是一个常量表达式，当为 true 时表示不抛出异常；
+- noexcept 说明：用于告知函数是否为抛出异常的关键字，这个关键字后可以跟一个括号中的布尔值，当省略时或者布尔值为 true 时表示不会抛出异常。
+- 不抛出异常说明（nonthrowing specification）：函数不会抛出异常的说明，如果一个承诺不抛出异常的函数抛出了异常，将会调用 terminate；
+- 无名名称空间（unnamed namespace）：没有名字的名称空间。无名名称空间在每个文件中都有唯一的一个，并且可以直接访问而不需要作用域操作符。无名名称空间中的名字在文件在是不可见的。
