@@ -196,12 +196,177 @@ bool Base::equal(const Base &rhs) const
 - `t.name()` 返回类型名字的可打印 C 风格字符串，类型名字是与系统相关的；
 - `t1.before(t2)` 当类型 t1 比 t2 出现的早时返回 true，顺序是编译器相关的；
 
+这个类提供了一个虚析构函数，因为其将作为一个基类。当编译期希望提供额外的信息，它通常会在 `type_info` 的派生类中完成。`type_info` 类没有默认构造函数，拷贝和移动构造函数以及赋值操作符都被定义为被删除的。所以只能通过 typeid 来获得 `type_info` 对象，而没有别的方式可以得到。
+
+`type_info` 的 name 成员是由编译器决定的，可能不会与程序中使用的名字相匹配，只保证每个类型的名字是唯一的。如：[RTTI.cc](https://github.com/chuenlungwang/cppprimer-note/blob/master/code/RTTI.cc)
+
 ## 19.3 枚举
 
-## 19.4 类成员指针
+枚举（enumerations）可以将整数常量集合起来管理。与类一样，每个枚举定义一个新的类型。类是字面类型（literal types）。
+
+C++ 支持两个枚举：带作用域的（scoped）和无作用域的（unscoped）。新标准引入了带作用域的枚举（scoped enumerations）。定义带作用域的枚举使用 enum class 或者 enum struct 关键字，后面跟着枚举名字和逗号分隔的一系列枚举值（enumerators）如：
+````cpp
+enum class open_modes { input, output, append };
+````
+如果省略掉 class 或 struct 关键字就是无作用域枚举（unscoped enumeration）。在无作用域 enum 中，枚举名字是可选的。如：
+````cpp
+enum color {red, yellow, green};
+enum {floatPrec = 6, doublePrec = 10, double_doublePrec = 10};
+````
+如果枚举是没有名字的，那么只能在枚举定义处定义其类型的对象，即在结束的括号处添加逗号分隔的声明列表。
+
+**枚举值（Enumerators）**
+
+在带作用域的枚举中的枚举值的名字需要按照正常的作用域规则进行，并且在枚举作用域之外是不可访问的。无作用域枚举的枚举值放在了与枚举自身相同的作用域中。如：
+````cpp
+enum color {red, yellow, green};
+enum stoplight {red, yellow, green}; // 错误：重复定义的枚举值
+enum class peppers {red, yellow, green};
+
+color eyes = green;
+peppers p = green; // peppers 的枚举值不在作用域中
+color hair = color::red; // 显式指定是可以的
+peppers p2 = peppers::red;
+````
+默认情况下，枚举值从 0 开始，每个枚举值都比之前的那个大 1 ，我们可以给一个或多个枚举值提供初始值，如：
+````cpp
+enum class intTypes {
+    charType = 8, shortType = 16, intType = 16,
+    longType = 32, long_longType = 64
+};
+````
+枚举值的值不需要是唯一的，shortType 和 intType 的值就是一样的。如果省略初始值，则其值比之前的枚举值多 1 。枚举值是常量，如果进行初始化，初始值必须是常量表达式。结果就是枚举值自己也是常量表达式，因而可以用于需要常量表达式的场景。如：
+````cpp
+constexpr intTypes charbits = intTypes::charType;
+````
+同样可以将枚举用于 switch 语句中，枚举值可以作为 case 标签。可以将枚举类型作为非类型模板参数（nontype template parameter），可以在类定义中初始化枚举类型的静态数据成员。
+
+**与类一样，枚举定义新的类型**
+
+只要枚举是由名字的，就可以定义和初始化这个类型的对象。枚举对象只能由其中一个枚举值或者相同枚举的另外一个对象初始化。如：
+````cpp
+open_modes om = 2; // 错误：2 不是 open_modes 类型
+om = open_modes::input;
+````
+无作用域的枚举的枚举值及其对象可以自动转为整型值，所以它们可以用于任何需要整数值的场景。如：
+````cpp
+int i = color::red;
+int j = peppers::red;
+````
+
+**Specifying the Size of an enum**
+
+如果没有指定枚举值的类型，对于有作用域的枚举来说就是 int 类型，对于无作用域的枚举来说就是足够容纳所有的枚举值的。如果指定了枚举值的类型，那么超出范围将会编译失败。这种方式将保证程序的行为在跨系统时都是一致的。如：
+````cpp
+enum intValues : unsigned long long {
+    charType = 255,
+    shortType = 65535,
+    intType = 65535,
+    longType = 4294967295UL,
+    long_longType = 18446744073709551615ULL
+};
+````
+
+**枚举的前置声明**
+
+在新标准下，可以前置声明枚举。枚举的前置声明必须指定枚举值的类型（显式或隐式）。如：
+````cpp
+enum intValues : unsigned long long; // 无作用域枚举，必须指定类型
+enum class open_modes; // 带作用域的枚举默认是 int 类型
+````
+所有的枚举定义和声明都必须是完全一致的（枚举值的类型），特别是不能在一个上下文中声明为无作用域的枚举，在另外一个地方声明为带作用域的枚举。
+
+**参数匹配和枚举**
+
+接收枚举的函数不能使用具有相同的值的整型值。如：
+````cpp
+enum Tokens {INLINE = 128, VIRTUAL = 129};
+void ff(Tokens);
+void ff(int);
+int main() {
+    Tokens curTok = INLINE;
+    ff(128); // ff(int)
+    ff(INLINE); // ff(Tokens)
+    ff(curTok); // ff(Tokens)
+    return 0;
+}
+````
+但是可以将枚举对象传递给接收整形值的函数，枚举将提升为 int 或者 long 等类型。如:
+````cpp
+void newf(unsigned char);
+void newf(int);
+unsigned char uc = VIRTUAL;
+newf(VIRTUAL); // newf(int)
+newf(uc); // newf(unsigned char)
+````
+
+## 19.4 类成员指针（Pointer to Class Member）
+
+指向成员的指针（pointer to member）是一种可以指向类的非静态成员的指针。通常指针可以指向一个对象，但是指向成员的指针表示一个类的成员。静态成员则可以使用常规的指针来操作。
+
+成员指针的类型同时具有类和类的成员的类型。只能将这种指针初始化为类的特定成员，而不指定这个成员属于哪个对象。当我们使用成员指针时，才提供在之上操作的对象。如：[class_member_pointer.cc](https://github.com/chuenlungwang/cppprimer-note/blob/master/code/class_member_pointer.cc)。
 
 ### 19.4.1 指向数据成员的指针
+
+定义成员指针必须提供类的名字，如：`const string Screen::*pdata;` 定义 pdata 是“Screen 类的成员指针，其类型是 const string”。初始化的过程如：`pdata = &Screen::contents;` 此处将取地址符作用域类 Screen 的成员，而不是一个内存中的对象。
+
+**使用数据成员指针**
+
+理解当初始化或者赋值成员指针时，其并没有指向任何数据。它表示一个特定的成员，但没有成员所在的对象的信息。当我们解引用成员指针时需要提供对象。成员指针访问符有两个：`.*` 和 `->*` 。如：
+````cpp
+Screen myScreen, *pScreen = &myScreen;
+auto s = myScreen.*pdata;
+s = pScreen->*pdata;
+````
+
+**函数返回数据成员指针**
+
+对成员指针一样运用常规的访问控制，private 的成员只能在类成员内部或者友元中使用。由于数据成员绝大部分都是私有的，所以应该定义一个共有成员函数返回数据成员指针。如：
+````cpp
+class Screen {
+public:
+    static const std::string Screen::*data()
+    {
+        return &Screen::contents;
+    }
+};
+````
+当调用时返回一个成员指针，如：
+````cpp
+const string Screen::*pdata = Screen::data();
+````
+pdata 仅仅只是指向类 Screen 的一个成员而不是真正的数据。为了使用 pdata，必须将一个对象绑定到成员指针上。如：
+````cpp
+auto s = myScreen.*pdata;
+````
+
 ### 19.4.2 指向成员函数的指针
+
+成员函数指针的定义要加上 `classname::*` 以及正常的函数指针的说明（返回类型与参数列表），如果成员函数是 const 成员或引用成员，必须在成员指针上体现出来。如：
+````cpp
+char (Screen::*pmf2)(Screen::pos, Screen::pos) const;
+pmf2 = &Screen::get;
+````
+`Screen::*pmf2` 外围的括号是必须的，问题出现在优先级上。没有括号，将被编译器认为是无效的函数声明。
+
+与常规的函数指针不同的是，成员函数和成员指针之间没有直接转换。如：`pmf = Screen::get;` 就是错误的。
+
+**使用成员函数指针**
+
+与使用数据成员一样，使用 `.*` 或 `->*` 操作符来通过成员函数指针调用成员函数。如：
+````cpp
+Screen myScreen, *pScreen = &myScreen;
+char c1 = (pScreen->*pmf)();
+char c2 = (myScreen.*pmf2)(0, 0);
+````
+这里使用括号的原因在函数调用符的优先级比成员指针访问符的优先级要高。
+
+由于函数调用的优先级较高，所以声明和调用成员函数指针都需要加上括号，`(C::*p)(params)` 和 `(obj.*p)(args)`。
+
+**成员指针的类型别名**
+
+
+
 ### 19.4.3 将成员函数用作可调用对象
 
 ## 19.5 嵌套类
