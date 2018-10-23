@@ -134,10 +134,67 @@ void f(const Base &b)
 
 ### 19.2.2 typeid 操作符
 
-RTTI 提供第二个操作符是 typeid 操作符，其可以知道对象的类型是什么。
+RTTI 提供第二个操作符是 typeid 操作符，其可以知道对象的类型是什么。typeid 表达式以 typeid(e) 的形式存在，其中 e 是任何表达式或者类型名字，结构是 `type_info` 库类或者其公有派生类的一个常量对象引用。`type_info` 类被定义在 typeinfo 头文件中。
+
+typeid 操作符可以被运用于任何表达式，顶层 const 将会被忽略，如果表达式是引用那么 typeid 将返回其绑定的对象类型。当表达式是数组或函数时，其不会被转为指针，结果将是数组类型或函数类型。
+
+如果操作数不是类类型或者是一个没有虚函数的类，那么结果是操作数的静态类型。当操作数是一个至少有一个虚函数的类类型左值，那么类型将在运行时被求值。
+
+**使用 typeid 操作符**
+
+通常使用 typeid 来比较两个表达式的类型或者将一个表达式的类型与特定的类型进行比较。如：
+````cpp
+Derived *dp = new Derived;
+Base *bp = dp;
+if (typeid(*bp) == typeid(*dp)) {
+// bp 和 dp 指向相同类型的对象
+}
+if (typeid(*bp) == typeid(Derived)) {
+// bp 实际指向一个 Derived
+}
+````
+注意这里 typeid 的参数不是指针本身，如果是指针的话将在编译期返回指针的静态类型。
+
+仅当类型具有虚函数时，才需要 typeid 在运行时求得其动态类型，而此时将必须对表达式求值。如果类型没有虚函数，那么 typeid 将在编译期返回表达式的静态类型；编译器不需要对表达式求值就可以知道其静态类型。这使得 `typeid(*p)` 如果 p 所指向的类型没有虚函数的话，p 可以不是有效的指针（如空指针）。
 
 ### 19.2.3 使用 RTTI
+
+使用 RTTI 的一个场景是定义 equal 函数，如果使用在基类中将 equal 函数定义为虚函数，那么其参数将不得不是基类类型，导致函数将无法使用派生类中的特有成员。而且 equal 函数应该是类型不同时返回 false。所以我们的 equal 函数定义如下：
+````cpp
+class Base {
+    friend bool operator==(const Base&, const Base&);
+protected:
+    virtual bool equal(const Base&) const;
+};
+class Derived : public Base {
+protected:
+    bool equal(const Base&) const;
+};
+
+// 相等操作符
+bool operator==(const Base &lhs, const Base &rhs)
+{
+    return typeid(lhs) == typeid(rhs) && lhs.equal(rhs);
+}
+bool Derived::equal(const Base &rhs) const
+{
+    auto r = dynamic_cast<const Derived&>(rhs);
+    // do the work to compare two Derived objects
+}
+bool Base::equal(const Base &rhs) const
+{
+    // do whatever is required to compare to Base objects
+}
+````
+
 ### 19.2.4 `type_info` 类
+
+`type_info` 类的精确定义在不同的编译器实现之间有所不同，但是标准保证这个类定义在 typeinfo 头文件中，并且提供如下函数：
+
+- `t1 == t2` 当 t1 和 t2 是 `type_info` 类型对象且表示相同的类型时返回 true，否则返回 false；
+- `t1 != t2` 与上一条款相反；
+- `t.name()` 返回类型名字的可打印 C 风格字符串，类型名字是与系统相关的；
+- `t1.before(t2)` 当类型 t1 比 t2 出现的早时返回 true，顺序是编译器相关的；
 
 ## 19.3 枚举
 
