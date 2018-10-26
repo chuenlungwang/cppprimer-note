@@ -532,14 +532,185 @@ ival = 42;
 
 新标准中允许定义有构造函数和拷贝控制成员的类类型成员，但是使用这种 union 将比只有内置类型成员的 union 要更加复杂。只有内置类型成员的 union 只需要简单的赋值就可以替换其成员的值，对于类类型成员则需要显式地构造和析构了。
 
-当 union 只有内置类型成员时，编译器可以合成默认
+当 union 只有内置类型成员时，编译器可以合成默认构造函数或拷贝控制成员，而如果 union 内有类类型成员，并且其中有类类型成员定义了自己的默认构造函数或拷贝控制成员，union 合成的对应的成员就是被删除的。如果一个类的成员 union ，并且这个 union 有拷贝控制成员是被删除的，那么此类对应的拷贝控制成员也是被删除的。
+
+**使用类来管理 union 的成员**
+
+如果 union 中有类类型的成员，其复杂度会变得很高，所以一般倾向于将其放在另外一个类中。这样就由这个类来管理 union 的状态转换。代码见：[union_class.cc](https://github.com/chuenlungwang/cppprimer-note/blob/master/code/union_class.cc)
 
 ## 19.7 本地类
 
+类可以定义在函数体内，这种类被称为本地类（local class）。本地类定义了一个只能在其被定义的作用域中可见的类型，与嵌套类不同在于，本地类的成员十分受限。
+
+本地类的所有成员（包括函数）都必须在类体内定义。本地类的函数代码长度通常会很短，太长则会使得代码难以理解。同样本地类不允许定义静态数据成员。
+
+**本地类不能使用函数作用域中的本地变量**
+
+本地类可访问的外围作用域中的名字是受限的，本地类只能访问外围作用域中的类型名字、静态变量和枚举值，不能访问外围函数中定义的常规本地变量。如：[local_class.cc](https://github.com/chuenlungwang/cppprimer-note/blob/master/code/local_class.cc) 所示。
+
+**本地类运用正常的保护规则**
+
+外围函数无权访问本地类的私有成员，当然，本地类可以将外围函数设置为友元，而本地类更常见的做法是将其成员设置为 public 的，可以访问本地类的程序部分是是否受限的，只能在外围函数中访问。本地类本身已经被封装在了函数的作用域中，如果再通过信息隐藏去封装就是多此一举了。
+
+**本地类中的名称查找**
+
+发生在本地类体中的名称查找与别的类中的名称查找没什么两样。成员声明中使用到的名字必须是之前出现过的，定义成员则无先后关系，这是由类的两步处理导致的结果。如果名字无法在类中找到，那么就会继续查找外围函数和外围函数的外部作用域。
+
+**嵌套本地类**
+
+可以在本地类中再嵌套类。这个嵌套类可以在本地类体的外部进行定义，但是嵌套类必须与本地类在同一个作用域中定义，意味着必须定义在同一个函数中。如：
+````cpp
+void foo()
+{
+    class Bar {
+    public:
+        class Nested;
+    };
+    class Bar::Nested {
+    };
+}
+````
+本地类的嵌套类也是本地类，遵循本地类的所有规则。
+
 ## 19.8 固有的不可移植特性
 
+为了支持底层编程（low-level programming），C++ 定义了一些固有不可移植的特性（nonportable features）。不可移植的特性是特定于机器的（machine specific），使用了不可移植的特性通常需要在换了平台时重新对这部分进行编程。其中算术类型的长度在不同机器之间不一样就是一个不可移植的特性。下面将描述从 C 继承来的不可移植特性：位域和 volatile 限定符，以及连接指令 `extern "C"`。
+
 ### 19.8.1 位域（bit-fields）
+
+类可以将数据成员定义为位域（bit-field），位域包含特定的位数（number of bits），它们通常用于传递二进制数据给另外一个程序或者给硬件设施。位域的内存布局是特定于机器的。
+
+位域必须是整数类型或者枚举类型。通常使用的类型是 unsigned 类型，这是由于 signed 位域的行为是由实现决定的。通过在成员名后加冒号和常量表达式指定位数。如：
+````cpp
+typedef unsigned int Bit;
+class File {
+    Bit mode : 2;
+    Bit modified : 1;
+    Bit prot_owner : 3;
+    Bit prot_group : 3;
+    Bit prot_world : 3;
+};
+````
+位域可能被会打包到一个整数值中去以压缩存储，至于是如何实现的标准并没有规定。地址操作符（&）不能用于位域字段，所以位域字段是没有指针的。
+
+**使用位域**
+
+位域的访问与普通的成员是一样的。多于一个 bit 位的位域通常使用内置位操作符进行操作。
+
 ### 19.8.2 volatile 限定符
+
+volatile 并不是一个有具体语义的关键字，而是由编译器实现决定的。硬件编程通常会有数据成员的值是外部进程决定的，如：变量是系统时钟。当对象的值会被程序外部改变时，应该将其声明为 volatile 的。volatile 指示编译器不要对这种对象进行优化。
+
+使用 volatile 关键字与 const 限定符是一样的。如：
+````cpp
+volatile int display_register;
+volatile Task *curr_task;
+volatile int iax[max_size];
+````
+volatile 与 const 之间没有任何交互，所以可以同时定义 volatile 和 const 而不相互影响。
+
+类可以定义 volatile 成员函数，volatile 成员函数只能在 volatile 对象上调用。volatile 与指针的相互作用和 const 与指针之间的相互作用是一样的，即指针本身是 volatile 或者指向 volatile 对象的对象，或者两者都是 volatile 的。如：
+````cpp
+volatile int v;
+int *volatile vip;
+volatile int *ivp;
+volatile int *volatile vivp;
+````
+与 const 一样，只能将 volatile 对象的地址赋值给指向 volatile 的指针，只能将 volatile 对象用于初始化 volatile 引用。
+
+**合成拷贝不会被运用于 volatile 对象**
+
+const 与 volatile 的一个最大的不同在于合成的拷贝控制成员不能以 volatile 对象为源，即不可以将其作为初始值或者赋值的右边操作数。如果想要这么做，必须手动定义对应的操作函数。如：
+````cpp
+class Foo {
+public:
+    Foo(const volatile Foo&);
+    Foo& operator=(volatile const Foo&);
+    Foo& operator=(volatile const Foo&) volatile;
+};
+````
+至于是否有必要这么做，决定于应用程序需要解决的问题。
+
 ### 19.8.3 链接指令：`extern "C"`
 
-## 关键术语
+C++ 有时会调用 C 语言中书写的函数，想要这么做必须首先声明这些函数。由于 C++ 中的函数与 C 的函数在二进制文件中的符号是不一样的。所以得使用链接指令（linkage directives）来告知 C++ 这个函数是用不同的语言写成的。
+
+**声明一个非 C++ 函数**
+
+链接指令有两种形式：单行和复合形式。链接指令不能出现在类和函数定义中。相同的连接指令必须出现在一个函数的所有声明处。如：
+````cpp
+extern "C" size_t strlen(const char*);
+extern "C" {
+    int strcmp(const char*, const char*);
+    char *strcat(char*, const char*);
+}
+````
+第一种形式就是 extern 关键字后跟一个字符串，后跟一个普通的函数声明。第二种形式则将所有的函数声明放在一个括弧中。
+
+还有一种用法是将 `#include` 放在链接指令中，如：
+````cpp
+extern "C" {
+    #include <string.h>
+}
+````
+这样 string.h 头文件中所有函数都被认为是 C 语言中的函数。链接指令是可以嵌套的，如果头文件中包含了一个函数有自己的链接指令，那个函数的链接将不会受到影响。
+
+**指向 extern "C" 函数的指针**
+
+函数的定义语言是函数类型的一部分，所以函数指针也要告知链接指令。如：
+````cpp
+extern "C" void (*pf)(int);
+````
+以上 pf 被认为是一个 C 函数的指针。C 函数的指针与 C++ 函数的指针是不同的类型，所以不能将 C++ 函数用于初始化 C 函数指针（反之亦然）。如：
+````cpp
+void (*pf1)(int);
+extern "C" void (*pf2)(int);
+pf1 = pf2; // 错误：pf1 和 pf2 是不同的类型
+````
+链接指令被运用于整个整个声明，如：
+````cpp
+extern "C" void f1(void(*)(int));
+````
+如上语句中，f1 和指针都是 C 函数。如果仅仅指向然指针是 C 函数则需要用到类型别名，如：
+````cpp
+extern "C" typedef void FC(int);
+void f2(FC *);
+````
+
+**将 C++ 函数导出给其它函数**
+
+通过在函数定义上运用链接指令，可以将 C++ 函数导出给 C 语言。如：
+````cpp
+extern "C" double calc(double dparam) { /* ... */ }
+````
+当编译器翻译代码时，它会将生成 C 语言的代码。
+
+需要注意的是跨语言的参数和返回值类型是受限的，比如不能传递 nontrivial C++ 类给 C 语言的程序，C 语言不知道构造函数、析构函数和其它与类相关的操作。
+
+**预处理器的支持**
+
+C++ 编译器定义了宏 `__cplusplus` ，所以可以用如下方式来加入链接指令。如：
+````cpp
+#ifdef __cplusplus
+extern "C"
+#endif
+int strcmp(const char*, const char*);
+````
+
+**重载函数和链接指令**
+
+C 语言不支持函数重载，所以只能将重载集合中的一个函数暴露给 C 语言。如：
+````cpp
+// 错误：将两个同名函数暴露给了 C 语言
+extern "C" void print(const char*);
+extern "C" void print(int);
+````
+如果重载函数集中有一个是 C 函数，那么其他所有函数必须是 C++ 函数。如：
+````cpp
+class SmallInt {};
+class BigNum {};
+extern "C" double calc(double);
+exter SmallInt calc(const SmallInt&);
+extern BigNum calc(const BigNum&);
+````
+C 版本的 calc 可以在 C 和 C++ 中调用，而其它的函数只能在 C++ 中调用，声明的顺序是不重要的。
