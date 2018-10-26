@@ -365,13 +365,174 @@ char c2 = (myScreen.*pmf2)(0, 0);
 
 **成员指针的类型别名**
 
+成员指针的类型别名如：
+````cpp
+using Action =
+char (Screen::*)(Screen::pos, Screen::pos) const;
 
+Action get = &Screen::get;
+````
+此处 Action 是“指向类 Screen 的成员函数指针，此成员函数是接收两个 pos 类型的参数返回 char 类型返回值的 const 成员”的别名。
+
+与别的函数指针一样，可以将成员函数指针类型作为返回类型或者参数类型，并且这种类型的参数可以有默认实参，如：
+````cpp
+Screen& action(Screen&, Action = &Screen::get);
+````
+
+**成员函数指针的表（Tables）**
+
+参考：[function_table.cc](https://github.com/chuenlungwang/cppprimer-note/blob/master/code/function_table.cc)
 
 ### 19.4.3 将成员函数用作可调用对象
 
+与常规的函数指针不一样的是，成员指针并不是一个可调用对象，这种指针并不支持函数调用操作符。这样就不能将其传递给算法函数了。如：
+````cpp
+auto fp = &string::empty;
+// 错误：.* 或 ->* 才能调用成员函数指针
+find_if(svec.begin(), svec.end(), fp);
+````
+`find_if` 期待一个可调用对象，但是 fp 并不是。
+
+**使用函数来产生可调用对象**
+
+一种从成员函数指针中获取可调用对象的方式是使用 function 模板。如：
+````cpp
+function<bool (const string&) fcn = &string::empty;
+find_if(svec.begin(), svec.end(), fcn);
+````
+通常，成员函数所在的对象是通过隐式参数 this 传递的，当用 function 来为成员函数产生可调用对象时，this 隐式参数转为显式参数。当 function 对象包含一个成员函数指针时，它会使用成员指针访问符（`.*` 和 `->*`）来对传入的对象进行成员函数指针调用。
+
+当定义 functin 对象时，必须指定函数的签名，这个签名的第一个参数必须是成员函数所在的对象的类型（在之上函数将会执行），并且必须指出所在的对象类型是指针还是引用。如下面就将所在对象定义为了指针：
+````cpp
+vector<string*> pvec;
+function<bool (const string*)> fp = &string::empty;
+find_if(pvec.begin(), pvec.end(), fp);
+````
+
+**使用`mem_fn`产生可调用对象**
+
+`mem_fn` 可以在不提供函数签名的情况下生成一个可调用对象，这个函数也定义在 functional 头文件中。如：
+````cpp
+find_if(svec.begin(), svec.end(), mem_fn(&string::empty));
+````
+由 `mem_fn` 生成的可调用对象可以在指针或对象上调用，而不必显式指出来，如：
+````cpp
+auto f = mem_fn(&string::empty);
+f(*svec.begin()); // 使用 obj.*f()
+f(&svec[0]); // 使用 ptr->*f()
+````
+可以认为 `mem_fn` 生成了一个重载了的调用操作符的可调用对象，其中一个以指针为参数，另一个以对象引用为参数。
+
+**使用 bind 生成可调用对象**
+
+bind 也可以生成一个可调用对象，如：
+````cpp
+bind(&string::empty, _1)
+````
+与 `mem_fn` 一样，不需要指定所在的对象是指针还是引用，但需要显式使用占位符告知所在对象在第一个参数的位置。
+
 ## 19.5 嵌套类
 
+一个类可以定义在另外一个类中，这样的类成为嵌套类（nested class），或者叫嵌套类型（nested type）。嵌套类最常用于定义实现类。
+
+嵌套类与其外围类是没有关系的，嵌套类型的对象没有外围类中定义的成员，反之亦然。
+
+嵌套类的名字在外围类是可见的，但是外部就不可见了（如果处于外围类的 private 控制下，在 public 的控制下依然是可见的）。
+
+外围类对于嵌套类没有特殊的访问权限，嵌套类对于外围类也没有特殊的访问权限。嵌套类在外围类中定义一个类型成员（type member）。定义在 public 部分中可以被用于任何地方，定义 protected 中则只能被外围类自身、友元和派生类使用，定义在 private 中则只能被外围类自身和友元访问。
+
+**在外围类外部定义嵌套类**
+
+嵌套类必须在外围类的内部声明，但是定义可以放在外围类的外部。当在外围类的外部定义嵌套类时，必须同时用外围类名和嵌套类名进行限定。如：
+````cpp
+class TextQuery {
+public:
+    class QueryResult;
+};
+class TextQuery::QueryResult {
+    friend std::ostream&
+        print(std::ostream&, const QueryResult&);
+public:
+    QueryResult(std::string,
+        std::shared_ptr<std::set<line_no>>,
+        std::shared_ptr<std::vector<std::string>>);
+};
+TextQuery::QueryResult::QueryResult(string s,
+        shared_ptr<set<line_no>> p,
+        shared_ptr<vector<string>> f):
+    sought(s), lines(p), file(f) { }
+````
+这里 QueryResult 的构造函数也不是定义在类体内，必须将构造函数用外围类和嵌套类名进行限定。
+
+**嵌套类的静态成员定义**
+
+在类外定义如下：
+````cpp
+int TextQuery::QueryResult::static_mem = 1024;
+````
+
+**嵌套类作用域中的名称查找**
+
+正常的名称查找规则运用于嵌套类。当然，嵌套类由一个额外的外围类作用域可供搜索。嵌套类是外围类的一个类型成员，外围类的成员可以不加限制的使用嵌套类的名字。参考代码：[TextQuery.cc/TextQuery.h](https://github.com/chuenlungwang/cppprimer-note/blob/master/code/TextQuery.cc)
+
+返回值类型需要加以限定 `TextQuery::QueryResult` ，在函数体内则可以直接引用 `QueryResult`。
+
+**嵌套和外围类是独立的**
+
+尽管嵌套类定义在外围类的内部，必须理解的是嵌套类对象与外围类对象之间没有必然的联系。嵌套类对象只包含它自己定义的成员，外围类对象也只包含它自己定义的成员，它不能直接访问嵌套类中的数据成员。
+
 ## 19.6 union : 空间节约型的类
+
+union 是一种特殊类型的类。union 可以由多个数据成员，但是在任何一个时间点，只有其中之一的成员是有值的。当 union 的一个成员被赋予值之后，其它所有成员都将是相同的底层二进制，至于如何对这些二进制进行解释则有其它成员本身的类型决定。union 需要的内存大小由最大的数据成员决定，内存大小将足够容纳这个数据类型。
+
+与类一样，union 定义一种新的类型。
+
+union 中的数据成员不能是引用，在 C++ 的早期版本中，数据成员的类型只能是内置类型，现在在新版本的 C++ 中可以是有构造函数和析构函数的类类型。
+
+union 可以设置访问权限标签 public 、private 和 protected，默认情况下 union 是 public 的，这与 struct 是一样的。
+
+union 可以定义成员函数，包括构造函数和析构函数，但是 union 不能继承别的类，也不能作为基类，union 也不能有虚函数。
+
+**定义 union**
+
+union 的定义以 union 关键字开始，后跟随可选的名字，以及一系列在括号中的成员声明。如：
+````cpp
+union Token {
+    char cval;
+    int ival;
+    double dval;
+};
+````
+
+**使用 union 类型**
+
+与内置类型一样，默认情况下 union 是不初始化的。用初始化聚合类（aggregate class）一样的方法来初始化 union，如：`Token token = {'a'};` 其中 a 用来初始化第一个成员 cval。union 的成员通过常规的成员访问符进行访问，如：
+````cpp
+last_token.cval = 'z';
+pt->ival = 42;
+````
+赋值给 union 对象的数据成员将导致别的数据成员的内容是未定义的。
+
+**匿名 union**
+
+匿名 union 是没有名字也没有定义对象的 union，当定义匿名 union 时，编译器自动创建一个匿名对象。如：
+````cpp
+// Defines an unnamed object, whose members we can access directly
+union {
+    char cval;
+    int ival;
+    double dval;
+};
+cval = 'c';
+ival = 42;
+````
+匿名 union 的成员可以在定义这个匿名 union 的作用域中直接访问。匿名 union 不能有 private 或者 protected 成员，也不能定义成员函数。
+
+**union中有类类型成员**
+
+新标准中允许定义有构造函数和拷贝控制成员的类类型成员，但是使用这种 union 将比只有内置类型成员的 union 要更加复杂。只有内置类型成员的 union 只需要简单的赋值就可以替换其成员的值，对于类类型成员则需要显式地构造和析构了。
+
+当 union 只有内置类型成员时，编译器可以合成默认
 
 ## 19.7 本地类
 
