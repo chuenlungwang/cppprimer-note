@@ -27,6 +27,14 @@ public:
     friend std::ostream& print(std::ostream&, const Sales_data&);
     friend std::istream& read(std::istream&, Sales_data&);
     friend Sales_data add(const Sales_data&, const Sales_data&);
+
+    friend std::ostream & operator<<(std::ostream &, const Sales_data &);
+    friend std::istream & operator>>(std::istream &, Sales_data &);
+    friend Sales_data operator+(const Sales_data &, const Sales_data &);
+    friend bool operator==(const Sales_data &lhs, const Sales_data &rhs);
+    friend bool operator!=(const Sales_data &lhs, const Sales_data &rhs);
+
+    Sales_data& operator+=(const Sales_data &);
 private:
     double avg_price() const;
     std::string bookNo_;
@@ -37,6 +45,12 @@ private:
 std::ostream& print(std::ostream&, const Sales_data&);
 std::istream& read(std::istream&, Sales_data&);
 Sales_data add(const Sales_data&, const Sales_data&);
+
+std::ostream & operator<<(std::ostream &, const Sales_data &);
+std::istream & operator>>(std::istream &, Sales_data &);
+Sales_data operator+(const Sales_data&, const Sales_data&);
+bool operator==(const Sales_data &lhs, const Sales_data &rhs);
+bool operator!=(const Sales_data &lhs, const Sales_data &rhs);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -82,6 +96,51 @@ Sales_data add(const Sales_data &lhs, const Sales_data &rhs)
     Sales_data sum = lhs;
     sum.combine(rhs);
     return sum;
+}
+
+std::ostream & operator<<(std::ostream &os, const Sales_data &item)
+{
+    os << item.isbn() << " " << item.units_sold_ << " "
+       << item.revenue_ << " " << item.avg_price();
+    return os;
+}
+
+std::istream & operator>>(std::istream &is, Sales_data &item)
+{
+    double price = 0;
+    is >> item.bookNo_ >> item.units_sold_ >> price;
+    if (is)
+        item.revenue_ = price * item.units_sold_;
+    else
+        item = Sales_data();
+    return is;
+}
+
+Sales_data operator+(const Sales_data &lhs, const Sales_data &rhs)
+{
+    Sales_data sum = lhs;
+    sum += lhs;
+    return sum;
+}
+
+bool operator==(const Sales_data &lhs, const Sales_data &rhs)
+{
+    return lhs.isbn() == rhs.isbn() &&
+           lhs.units_sold_ == rhs.units_sold_ &&
+           lhs.revenue_ == rhs.revenue_;
+}
+
+bool operator!=(const Sales_data &lhs, const Sales_data &rhs)
+{
+    return !(lhs == rhs);
+}
+
+Sales_data& Sales_data::operator+=(const Sales_data &rhs)
+{
+    // Caution: isbn of two objects must be same.
+    this->units_sold_ += rhs.units_sold_;
+    this->revenue_ += rhs.revenue_;
+    return *this;
 }
 
 /////////////////////////////////////////////////////////////////////////

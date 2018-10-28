@@ -9,7 +9,10 @@ EXECUTABLES := noexcept array constexpr_class namespace_class \
 	function_table \
 	union_class \
 	local_class \
-	union
+	union \
+	use_sales_data \
+	StrVec \
+	StrBlob
 
 BUILD_PATH = build
 

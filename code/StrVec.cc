@@ -28,6 +28,18 @@ public:
     std::string* begin() const { return elements; }
     std::string* end() const { return first_free; }
 
+    StrVec & operator=(std::initializer_list<std::string>);
+
+    std::string & operator[](std::size_t n)
+    {
+        return elements[n];
+    }
+
+    const std::string & operator[](std::size_t n) const
+    {
+        return elements[n];
+    }
+
     template <typename... Args>
     void emplace_back(Args &&... args);
 private:
@@ -124,6 +136,15 @@ StrVec::operator=(StrVec &&rhs) noexcept
     return *this;
 }
 
+StrVec& StrVec::operator=(std::initializer_list<std::string> il)
+{
+    std::pair<std::string*, std::string*> data = alloc_n_copy(il.begin(), il.end());
+    free();
+    elements = data.first;
+    cap = first_free = data.second;
+    return *this;
+}
+
 StrVec::~StrVec()
 {
     free();
@@ -156,4 +177,19 @@ StrVec::reallocate()
     elements = newdata;
     first_free = last;
     cap = newdata + newcapacity;
+}
+
+int main()
+{
+    StrVec svec;
+    svec.push_back("");
+    svec.push_back("b");
+    const StrVec cvec = svec;
+    if (svec.size() && svec[0].empty()) {
+        svec[0] = "zero";
+        // error: cvec is constant, subscripting returns a const reference
+        //cvec[0] = "Zip";
+    }
+    std::cout << svec[0] << std::endl;
+    return 0;
 }
