@@ -43,6 +43,15 @@ public:
     StrBlobPtr operator++(int);
     StrBlobPtr& operator--();
     StrBlobPtr operator--(int);
+    std::string & operator*() const
+    {
+        auto p = check(curr, "dereference past end");
+        return (*p)[curr];
+    }
+    std::string * operator->() const
+    {
+        return & this->operator*();
+    }
 private:
     std::shared_ptr<std::vector<std::string>>
         check(std::size_t, const std::string &) const;
@@ -198,6 +207,12 @@ int main()
     StrBlobPtr p(sb1);
     std::cout << p.operator++(0).deref() << std::endl;
     std::cout << p.operator++().deref() << std::endl;
+
+    StrBlob al = { "hi", "bye", "now" };
+    StrBlobPtr p2(al);
+    *p = "okay";
+    std::cout << p->size() << std::endl;
+    std::cout << (*p).size() << std::endl;
 
     return 0;
 }
