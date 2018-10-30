@@ -14,7 +14,9 @@ EXECUTABLES := noexcept array constexpr_class namespace_class \
 	StrVec \
 	StrBlob \
 	function_call_operator \
-	conversion_operator
+	conversion_operator \
+	manipulator \
+	stringstream
 
 BUILD_PATH = build
 
