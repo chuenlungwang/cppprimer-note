@@ -16,7 +16,8 @@ EXECUTABLES := noexcept array constexpr_class namespace_class \
 	function_call_operator \
 	conversion_operator \
 	manipulator \
-	stringstream
+	stringstream \
+	seq_container
 
 BUILD_PATH = build
 
