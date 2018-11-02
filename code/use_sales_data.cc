@@ -1,5 +1,7 @@
 #include <iostream>
 #include <string>
+#include <deque>
+#include <vector>
 
 class Sales_data {
 public:
@@ -147,6 +149,24 @@ Sales_data& Sales_data::operator+=(const Sales_data &rhs)
 
 int main()
 {
+    //:CH9:
+    // Emplace operations of container
+    std::deque<Sales_data> c;
+    c.emplace_back("978-0590353403", 25, 15.99);
+    c.push_back(Sales_data("978-0590353403", 25, 15.99));
+    c.emplace(c.begin(), "999-99999999"); // uses Sales_data(string)
+    c.emplace_back(); // use Sales_data()
+    c.emplace_front("978-0590353403", 25, 15.99);
+
+    //:CH9:
+    // accessing elements in a sequantial container
+    if (!c.empty()) {
+        auto val = *c.begin(), val2 = c.front();
+        auto last = c.end();
+        auto val3 = *(--last);
+        auto val4 = c.back();
+    }
+
     Sales_data total = Sales_data();
     std::string null_book = "9-999-99999-9";
     total.combine(static_cast<const Sales_data>("9-999-99999-9"));
