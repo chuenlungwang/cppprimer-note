@@ -74,12 +74,12 @@ int main()
     si = 4; // implicitly converts 4 to SmallInt
     (void)(si + 3); // implicitly converts si to int
 
-    SmallInt si2 = 3.14; // calls the SmallInt(int) constructor
+    SmallInt si2 = (int)3.14; // calls the SmallInt(int) constructor
     (void)(si2 + 3.14); // converts SmallInt to int, then converts to double
 
     B b;
-    A a = f(b); // There is no ambiguity under Cygwin compiler
-    (void)(a);
+    //A a = f(b); // There is no ambiguity under Cygwin compiler
+    //(void)(a);
 
     f(b.operator A());
     f(A(b));

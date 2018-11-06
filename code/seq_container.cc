@@ -71,12 +71,41 @@ int main()
     std::string str = a;
     std::forward_list<std::string> words(articles.cbegin(), articles.cend());
 
+    // Size-Related Constructors
+    std::vector<int> ivec1(10, -1);
+    std::list<std::string> svec1(10, "hi!");
+    // value-initialized sequantial container
+    std::forward_list<int> iflvec(10);
+    std::deque<std::string> sdqvec(10);
+
+    // Size is part of std::array type
+    std::array<int, 42> intarr;
+    std::array<std::string, 10> strarr;
+    std::array<int, 10>::size_type i;
+    // error: std::array<int> is not a type
+    // std::array<int>:: size_type j;
+
+    // Default-constructed array is not empty, elements are default
+    // initialized. If list initialize std::array and number of the
+    // initializer is fewer than size of the array, remaining elements
+    // are value initilized.
+    std::array<int, 10> ia1;
+    for (const int n : ia1) {
+        std::cout << "ia1: " << n << std::endl;
+    }
+    std::array<int, 10> ia2 = {0,1,2,3,4,5,6,7,8,9};
+    std::array<int, 10> ia3 = {42};
+
+    // We can copy std::array, but not built-in array
+    std::array<int, 10> digits = {0,1,2,3,4,5,6,7,8,9};
+    std::array<int, 10> copy = digits;
+
     std::array<int, 10> a2 = {0,1,2,3,4,5,6,7,8,9};
     std::array<int, 10> a3 = {0};
     a2 = a3;
 
     // Error: cannot assign to an array from a braced list
-    a3 = {0}; // This is not error at Cygwin compiler
+    a3 = {0}; // This is not error at Cygwin/clang compiler
 
     // assign members for compatible type
     std::list<std::string> names;
