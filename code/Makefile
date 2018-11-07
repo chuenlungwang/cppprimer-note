@@ -20,7 +20,10 @@ EXECUTABLES := noexcept array constexpr_class namespace_class \
 	seq_container \
 	use_string \
 	use_container_adaptor \
-	overview_of_algorithms
+	overview_of_algorithms \
+	lambda \
+	bind \
+	iterator
 
 BUILD_PATH = build
 

@@ -4,6 +4,7 @@
 #include <list>
 #include <numeric>
 #include <iterator>
+#include <functional>
 
 void elimDups(std::vector<std::string> &words)
 {
@@ -15,6 +16,27 @@ void elimDups(std::vector<std::string> &words)
 bool isShorter(const std::string &s1, const std::string &s2)
 {
     return s1.size() < s2.size();
+}
+
+std::string
+make_plural(size_t ctr, const std::string &word, const std::string &ending)
+{
+    return (ctr<=1)?word:word+ending;
+}
+
+void biggies(std::vector<std::string> &words, std::vector<std::string>::size_type sz)
+{
+    elimDups(words);
+    std::stable_sort(words.begin(), words.end(), isShorter);
+    auto wc = std::find_if(words.begin(), words.end(),
+            [sz](const std::string &a) { return a.size() >= sz; });
+    auto count = words.end() - wc;
+    std::cout << count << " " << make_plural(count, "word", "s")
+              << " of lenght " << sz << " or longer" << std::endl;
+    std::for_each(wc, words.end(), [](const std::string &s) {
+        std::cout << s << " ";
+    });
+    std::cout << std::endl;
 }
 
 int main()
@@ -59,9 +81,13 @@ int main()
     std::vector<std::string> words{"the","quick","red","fox","jumps","over","the","slow","red","turtle"};
     elimDups(words);
     std::stable_sort(words.begin(), words.end(), isShorter);
+    using namespace std::placeholders;
+    std::stable_sort(words.begin(), words.end(), std::bind(isShorter, _2, _1));
     std::for_each(words.cbegin(), words.cend(), [](const std::string &str) {
         std::cout << str << " ";
     });
+    std::cout << "\n";
+    biggies(words, 4);
 
     return 0;
 }
