@@ -1,4 +1,36 @@
+C++ 语言本身并不直接处理输入和输出，相反是在标准库中定义一族类型来处理 IO。这些类型支持从文件和控制台中进行输入和输出。还有额外的类型允许对内存中的 string 进行 IO。
+
+IO 库已经定义如何对内置类型值进行读写，同样，类类型可以定义自己的 IO 操作符来进行输入输出。本章主要聚焦于基本的 IO 操作，14 章将介绍如何定义类类型的操作符，17 章将介绍如何控制格式化以及随机访问文件。
+
+最基本的 IO 库设施包括：
+
+- istream 用于输入操作；
+- ostream 用于输出操作；
+- cin 是标准输入对象（istream 类型）；
+- cout 是标准输出对象（ostream 类型）；
+- cerr 是标准错误对象（ostream 类型）；
+- `>>` 用于从 istream 对象中读取输入；
+- `<<` 用于向 ostream 对象写入输出；
+- getline 函数用于从 istream 对象中读取一行输入并存入 string 中去；
+
 ## 8.1 IO 类
+
+直接介绍过 cin、cout、cerr 对象用于在控制台上进行输入输出，而真实应用还需要从文件和 string 中进行输入输出，同时需要支持宽字符的输入输出。为了支持所有这些不同类型的 IO 操作，标准库定义了一系列 IO 类型用于补充 istream 和 ostream 类型。
+
+它们被定义在三个不同的头文件中，iostream 定义基础类型，fstream 定义针对文件的输入输出，sstream 定义针对 string 的输入输出。如：
+
+- iostream 头文件：istream、wistream 从流中读取，ostream、wostream 写入流，iostream、wiostream 对流进行读写；
+- fstream 头文件：ifstream、wifstream 从文件中读取，ofstream、wofstream 写文件，fstream、wfstream 对文件进行读写；
+- sstream 头文件：istringstream、wistringstream 从字符串中读取，ostringstream、wostringstream 写入到字符串中，stringstream、wstringstream 对字符串进行读写；
+
+为了支持宽字符集，标准库定义了处理 `wchat_t` 数据的类型和对象。宽字符版本通常以 w 开头，如 wcin，wcout，wcerr 是 cin，cout，cerr 的款字符对应对象。宽字符类型与对象和对应的常规的字符类型输入输出版本定义在同一个头文件中。
+
+**IO 类型之间的关系**
+
+不论是哪一种方式的 IO，从控制台或者文件或者字符串中进行输入输出，或者是字符宽度的不一样都不会影响操作的使用形式，都是使用 `<<` 和 `>>`。之所以能够这样的做的原因在于不同种类的 stream 使用了继承（inheritance）。使用继承时不需要理解继承工作的细节，可以将派生类的对象完全当做基类对象来使用。ifstream 和 istringstream 都继承自 istream，所以可以将 ifstream 或 istringstream 类型对象当做 istream 对象来使用，这样可以将 `>>` 用于从 ifstream 和 istringstream 中读取数据。
+
+本节中后面介绍的内容可以无差异的用于所有的 stream 类型。
+
 ### 8.1.1 不能拷贝或赋值 IO 对象
 
 IO 类型的对象是不可以拷贝或赋值的，函数只能传递或者返回流对象的引用。读取或写入 IO 对象会改变起状态，所以引用必须不是 const 的。
@@ -170,6 +202,27 @@ for (auto p = argv + 1; p != argv + argc; ++p) {
 每次迭代时都会自动创建一个新的 ifstream 对象并打开给定文件。由于 input 是 while 中的本地对象，它将在每次迭代时自动的创建和销毁。当 fstream 对象离开作用域之后，与其关联的文件会自动关闭。在下一次迭代时会创建一个新的。
 
 ### 8.2.2 文件模式
+
+每个流都有与之关联的文件模式（file mode）来代表文件可以如何被使用。以下列举文件模式和它们的含义：
+
+- in 打开作为输入；
+- out 打开作为输出；
+- app 在每次写入前都跳到文件的尾部；
+- ate 在打开后直接跳到文件的尾部；
+- trunc 将文件截断；
+- binary 以二进制模式进行 IO 操作；
+
+当打开文件时可以提供一个文件模式。打开文件可能是直接调用 open 打开，通过初始化文件流关联到一个特定文件上也会间接打开这个文件。可以指定的文件模式有一些限制：
+
+- out 只能给 ofstream 或者 fstream 对象设置；
+- in 只能给 ifstream 或者 fstream 对象设置；
+- trunc 只能设置了 out 的时候进行设置；
+- app 只要在没有设置 trunc 时就可以设置，如果指定了 app，那么文件总是在输出模式下打开，即便 out 没有显式指定；
+- 默认情况下，一个文件如果是在 out 模式下会被截断，即便没有显式指定 trunc。为了保留文件的内容，可以通过指定 app 或者同时指定 in 同时用于输入输出；
+- ate 和 binary 模式可以在任何文件流类型上设置，可以与任何别的文件模式组合使用；
+
+每个文件流类型都定义了默认的文件模式。ifstream 默认以 in 模式打开文件，ofstream 默认以 out 模式打开文件；fstream 关联的文件则同时以 in 和 out 打开文件；
+
 ## 8.3 string 流
 ### 8.3.1 使用 istringstream 对象
 ### 8.3.2 使用 ostringstream 对象
