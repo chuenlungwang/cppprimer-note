@@ -224,6 +224,24 @@ for (auto p = argv + 1; p != argv + argc; ++p) {
 每个文件流类型都定义了默认的文件模式。ifstream 默认以 in 模式打开文件，ofstream 默认以 out 模式打开文件；fstream 关联的文件则同时以 in 和 out 打开文件；
 
 ## 8.3 string 流
+
+sstream 头文件中定义了三个支持内存中 IO 的类型；这些类型将 string 当作一个 IO 流进行读写。
+
+istringstream 可以读取一个 string ，ostringstream 可以写一个 string，stringstream 可以对 string 进行读写。sstream 头文件中的类型继承自 iostream 头文件中的类型，除了继承来的成员之外，sstream 还定义了成员来管理与之相关的 string 。它们不能在其它 IO 类型上调用，如：
+
+- `sstream strm` strm 是没有关联的 stringstream。*sstream* 是定义在 sstream 头文件中的一个类型；
+- `sstream strm(s)` strm 是关联到字符串 s 副本的 *sstream* 对象，这个构造函数是 explicit 的；
+
+尽管 fstream 和 sstream 共享相同的 iostream 接口，它们之间没有任何别的关系，特别是不能用 open 和 close 在 stringstream 上，也不能将 str 用于 fstream 上。
+
 ### 8.3.1 使用 istringstream 对象
 ### 8.3.2 使用 ostringstream 对象
+
+如代码：[stringstream.cc](https://github.com/chuenlungwang/cppprimer-note/blob/master/code/stringstream.cc)
+
+使用 sstream 可以很方便的将 string 作为输入输出源，可以做到很精细化的操作。
+
 ## 关键概念
+
+- **条件状态（condition state）：**流类中用于查询流对象是否可用的标志以及相关的函数；
+- **文件模式（file mode）：**fstream 定义的标志用于控制文件如何被打开；
