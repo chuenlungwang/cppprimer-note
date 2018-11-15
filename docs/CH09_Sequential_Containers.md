@@ -379,6 +379,47 @@ if (storeA < storeB) // 错误：Sales_data 没有小于操作符
 ````
 
 ## 9.3 顺序容器操作
+
+- `c.push_back(t)` `c.emplace_back(args)` 在容器 c 的尾部创建一个元素，其值为 t 或者以 args 为参数进行构建，无返回值；
+- `c.push_front(t)` `c.emplace_front(args)` 在容器 c 的头部创建一个元素，其值为 t 或者以 args 为参数进行构建，无返回值；
+- `c.insert(p,t)` `c.emplace(p,args)` 在迭代器 p 所指向的元素之前插入元素，其值为 t 或者以 args 为参数构建，返回被添加元素的迭代器；
+- `c.insert(p,n,t)` 在迭代器 p 所指向的元素之前插入 n 个值为 t 的元素。返回指向第一个被添加的元素的迭代器；如果 n 是 0，返回 p；
+- `c.insert(p,b,e)` 在迭代器 p 所指向的元素之前插入由迭代器 b 和 e 所表示的范围中的元素。b 和 e 不能 c 中的元素。返回指向第一个被插入的元素的迭代器；如果范围是空，返回 p；
+- `c.insert(p,il)` il 是一个括号中的初始值列表。将给定值插入到由 p 所指向的元素之前；返回第一个被添加的元素的迭代；如果列表是空的，返回 p；
+
+注意：添加元素到 vector、string 或者 deque 中有可能会使得所有容器中现存的迭代器、引用和指针失效；
+
+当我们使用这些操作时，需要记住这些容器使用不同的策略来分配内存给元素，这将会影响到性能。除了在尾部给 vector 和 string 添加元素，或者除了在首尾给 deque 添加元素都会导致元素移动。而且，添加元素给 vector 和 string 可能会导致整个容器的重新分配。重新分配整个对象需要重新分配内存，然后将其元素从旧的位置移动到新的位置。
+
+**使用 `push_back`**
+
+`push_back` 可以在容器的尾部添加元素，除了 array 和 `forward_list` 所有的顺序容器都支持 `push_back`。如：
+````cpp
+string word;
+while (cin >> word)
+    container.push_back(word);
+````
+由于 string 就是字符的容器，可以用 `push_back` 在 string 的尾部添加字符：
+````cpp
+word.push_back('s');
+````
+**关键概念：容器元素是拷贝的**
+
+当我们使用对象来初始化容器，或者插入一个对象到容器中时，放入容器中的是哪个对象值的拷贝，不是对象本身。这就像我们传递一个对象给非引用参数是一样的，容器中的元素与这个对象没有任何关系。接下来如果改变了元素的值并不会影响到原始值，反之亦然。
+
+**使用 `push_front`**
+
+除了 `push_back` ，list 、`forward_list` 和 deque 还支持类似的操作 `push_front` ，这个操作在容器的首部插入一个新的元素：
+
+````cpp
+list<int> ilist;
+for (size_t ix = 0; ix != 4; ++ix)
+    ilist.push_front(ix);
+````
+在执行完这个循环之后，ilist 中包含值 3,2,1,0
+
+deque 和 vector 一样支持对其元素的快速随机访问，并且提供 `push_front` 成员。deque 保证在其首尾添加或删除元素是固定时间的。与 vector 一样，在中间部分插入元素将是很耗时的操作。
+
 ### 9.3.1 给顺序容器添加元素
 ### 9.3.2 访问元素
 ### 9.3.3 移除元素
