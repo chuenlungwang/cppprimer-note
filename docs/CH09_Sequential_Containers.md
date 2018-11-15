@@ -380,6 +380,16 @@ if (storeA < storeB) // 错误：Sales_data 没有小于操作符
 
 ## 9.3 顺序容器操作
 
+顺序容器和关联容器的区别在于如何组织元素。这些区别会影响元素是如何被存储、访问、添加和移除的。前面的部分主要介绍的是所有容器共有的操作。
+
+以下将介绍顺序容器特有的操作。
+
+### 9.3.1 给顺序容器添加元素
+
+除了 array 之外的容器都提供了灵活的内存管理机制。可以动态的添加或移除容器中的元素从而在运行时改变容器的大小。以下是给顺序容器添加元素的操作：
+
+以下的操作都会改变容器的大小；array 不支持这些操作。`forward_list` 有自己的 insert 和 emplace 的版本；`forward_list` 并不支持 `push_back` 和 `emplace_back`。string 和 vector 不支持 `push_front` 和 `emplace_front`；
+
 - `c.push_back(t)` `c.emplace_back(args)` 在容器 c 的尾部创建一个元素，其值为 t 或者以 args 为参数进行构建，无返回值；
 - `c.push_front(t)` `c.emplace_front(args)` 在容器 c 的头部创建一个元素，其值为 t 或者以 args 为参数进行构建，无返回值；
 - `c.insert(p,t)` `c.emplace(p,args)` 在迭代器 p 所指向的元素之前插入元素，其值为 t 或者以 args 为参数构建，返回被添加元素的迭代器；
@@ -409,7 +419,7 @@ word.push_back('s');
 
 **使用 `push_front`**
 
-除了 `push_back` ，list 、`forward_list` 和 deque 还支持类似的操作 `push_front` ，这个操作在容器的首部插入一个新的元素：
+list 、`forward_list` 和 deque 支持类似的操作 `push_front` ，这个操作在容器的首部插入一个新的元素：
 
 ````cpp
 list<int> ilist;
@@ -420,8 +430,124 @@ for (size_t ix = 0; ix != 4; ++ix)
 
 deque 和 vector 一样支持对其元素的快速随机访问，并且提供 `push_front` 成员。deque 保证在其首尾添加或删除元素是固定时间的。与 vector 一样，在中间部分插入元素将是很耗时的操作。
 
-### 9.3.1 给顺序容器添加元素
+**在容器的特定位置添加元素**
+
+`push_back` 和 `push_front` 操作提供了方便的方式在顺序容器的头尾插入单个元素。更为通用的是 insert 成员允许我们在容器的任何位置插入零个或更多元素。vector 、 deque 、 list 和 string 支持 insert 成员。 `forward_list` 提供了这些成员的特别版本。
+
+每个 insert 函数都以一个迭代器作为其第一个参数。这个迭代器表示元素将被插入的位置，它可以是容器中的任何位置，包括容器的尾后位置。由于迭代器可能指向尾后的不存在的元素，并且需要支持在容器的头部插入元素，元素将被插入到迭代器表示的位置之前。如：
+````cpp
+slist.insert(iter, "Hello!");
+````
+将插入一个字符串到 iter 所表示的元素之前。
+
+尽管有些容器没有 `push_front` 操作，insert 并没有这种限制。可以在容器的前面 insert 元素而不用担心容器是否支持 `push_front`：
+````cpp
+vector<string> svec;
+list<string> slist;
+slist.insert(slist.begin(), "Hello!");
+svec.insert(svec.begin(), "Hello!");
+````
+注意：在 vector 、deque 、string 的任何位置插入元素都是合法的，但是这样做是很耗时的操作。
+
+**插入元素范围**
+
+insert 除了第一个参数后的参数的模式与构造函数具有相同的参数模式。
+
+其中一个版本 insert 以元素数目和值作为参数，将添加指定数目的同一元素到给定的位置：
+````cpp
+svec.insert(svec.end(), 10, "Anna");
+````
+这段代码添加 10 个元素到 svec 的尾部，每个元素的值都是 "Anna"。
+
+还有一个版本的 insert 以一对迭代器或者一个初始值列表作为参数，将给定范围内的值插入到指定位置：
+````cpp
+vector<string> v = {"quasi","simba","frollo","scar"};
+slist.insert(slist.begin(), v.end()-2, v.end());
+slist.insert(slist.end(), {"these","words","will","go","at","the","end"});
+// 运行时错误：表示拷贝源的迭代器范围不能指向插入的容器，这是因为迭代器会失效
+slist.insert(slist.begin(), slist.begin(), slist.end());
+````
+当以一对迭代器作为拷贝源时，这些迭代器一定不能指向将要插入元素的容器。
+
+在新标准下 insert 成员会返回指向被插入的第一个元素迭代器，之前的版本没有返回值。如果范围是空的，没有元素被插入，并且返回 insert 函数的第一个参数。
+
+**使用 insert 的返回值**
+
+使用 insert 的返回值可以重复的插入元素到容器中指定的位置：
+````cpp
+list<string> lst;
+auto iter = lst.begin();
+while (cin >> word)
+    iter = lst.insert(iter, word);
+````
+
+**使用 emplace 操作**
+
+新标准加入三个新的成员 `emplace_front` 、 emplace 和 `emplace_back` ，这三个成员对应于 `push_front` 、 insert 和 `push_back`，只是它们不是拷贝元素而是直接构建。
+
+当我们调用 emplace 成员时，传递给元素类型的构造函数的参数，并以这些参数直接直接构建一个对象放在容器中。如在 c 中置入 `Sales_data` 元素：
+````cpp
+c.emplace_back("987-0590353403", 25, 15.99); //(1)
+c.push_back(Sales_data("987-0590353403", 25, 15.99)); //(2)
+````
+(1) 是直接在容器中构建对象，(2) 则是先创建一个本地临时量，然后将其置入容器中。
+
+传递给 emplace 函数的参数与元素类型有关。参数必须与元素类型的一个构造函数参数列表匹配：
+````cpp
+c.emplace_back(); // 调用 Sales_data 的默认构造函数
+c.emplace_back(iter, "999-999999999");
+c.emplace_back("987-0590353403", 25, 15.99);
+````
+
 ### 9.3.2 访问元素
+
+下面的列表中列举了可以用于访问顺序容器中元素的操作，这些操作在容器中没有元素时是*未定义*的：
+
+at 和 [] 是适用于 string 、 vector 、 deque 和 array，back 不适用于 `forward_list`
+
+- `c.back()` 返回指向容器 c 的最后一个元素的引用，如果 c 是空的结果将是未定义的；
+- `c.front()` 返回指向容器 c 的首元素的引用，如果 c 是空的结果将是未定义的；
+- `c[n]` 返回由无符号整数 n 索引的元素，如果 `n >= c.size()` 结果是未定义的；
+- `c.at(n)` 返回由无符号整数 n 索引的元素，如果索引超出了范围，将抛出 `out_of_range` 的异常；
+
+注意：在空的容器中调用 front 或 back 或者在使用下标时超出范围，是非常严重的编程错误。
+
+每个顺序容器都有 front 成员（包括 array），除了 `forward_list` 之外的顺序容器都有 back 成员，这些操作分别返回首元素和尾元素的引用，如：
+````cpp
+if (!c.empty()) {
+    auto val = *c.begin(), val2 = c.front();
+    auto last = c.end();
+    auto val3 = *(--last);
+    auto val4 = c.back();
+}
+````
+以上程序用两种不同的方式获取容器 c 的首元素和尾元素。需要注意的 end 返回的迭代器指向的是一个不存在的元素，在解引用之前需要先递减一。而且在获取元素之前，需要先检查 c 是不是空的，如果容器是空的，那么 if 内的操作就是未定义的。
+
+**访问成员返回的是引用**
+
+访问成员返回的是容器中元素的引用，如果容器是 const 对象，那么返回的引用也是 const 的。如果容器是非 const 的，那么引用就是常规引用，我们可以使用其来改变元素的值：
+````cpp
+if (!c.empty()) {
+    c.front() = 42;
+    auto &v = c.back();
+    v = 1024;
+    auto v2 = c.back();
+    v2 = 0;
+}
+````
+用 auto 保存返回的引用，必须将 auto 定义引用类型。
+
+**下标操作和安全的随机访问**
+
+提供快速随机访问的容器（string、vector、deque 和 array）同时提供了下标操作。下标操作符用一个索引返回那个位置的元素的引用。索引必须是在安全范围内的（大于等于 0 并且小于容器的大小）。保证索引是合法的是程序的责任；下标操作不会检查索引是否在范围内。使用超出范围的索引是严重的编程错误，但是这个错误是编译器发现不了的。
+
+如果想要保证索引是合法的，可以使用 at 成员。at 成员的行为与下表操作符类型，但是当索引是不合法的时候，at 将抛出 `out_of_range` 异常：
+````cpp
+vector<string> svec;
+cout << svec[0]; // 运行时错误，但是编译器发现不了
+cout << svec.at(0); // 将抛出 out_of_range 异常
+````
+
 ### 9.3.3 移除元素
 ### 9.3.4 特定于 `forward_list` 的操作
 ### 9.3.5 resize 容器大小
