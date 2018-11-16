@@ -549,6 +549,35 @@ cout << svec.at(0); // 将抛出 out_of_range 异常
 ````
 
 ### 9.3.3 移除元素
+
+正如有多种方式添加元素到容器中去，同样有多种方式移除元素。（array 不支持这些函数），以下是这些成员：
+
+这些操作会改变容器的大小，所以 array 不支持这些操作。`forward_list` 有自己特殊的 erase 版本；`pop_back` 不适用于 `forward_list`；`pop_front` 不适用于 vector 和 string；
+
+- `c.pop_back()` 移除容器 c 中的尾元素，如果 c 是空的，结果将是未定义的，返回值是 void；
+- `c.pop_front()` 移除容器 c 的首元素，如果 c 是空的，结果将是未定义的，返回值是 void；
+- `c.erase(p)` 移除迭代器 p 指向的元素，并返回被删除元素之后的迭代器，如果 p 指向最后一个元素则返回尾后迭代器。如果 p 本身就是尾后迭代器，结果将是未定义的；
+- `c.erase(b,e)` 移除由迭代器 b 和 e 表示的范围中的元素，返回最后一个被删除的元素之后的迭代器，如果 e 本身就是尾后迭代器，返回尾后迭代器；
+- `c.clear()` 移除 c 中所有的元素，返回 void；
+
+注意：除了在 deque 的首尾删除元素之外，其它位置的删除操作将会导致所有的迭代器、引用和指针失效。对于 vector 和 string，处于删除点之后的所有元素的迭代器、引用和指针将失效；
+
+移除元素的成员不会检查其参数，保证元素在移除前存在是程序员的责任。
+
+**`pop_front` 和 `pop_back` 成员**
+
+`pop_front` 和 `pop_back` 分别移除首尾元素。就像 vector 和 string 没有 `push_front` 一样，它们也没有 `pop_front` 。类似的 `forward_list` 没有 `pop_back` 成员。就像元素访问成员一样，不要将 pop 操作用于空的容器。
+
+这些操作返回 void，如果你需要被 pop 的值，你需要在 pop 之前先将其存储起来：
+````cpp
+while (!ilist.empty()) {
+    process(ilist.front());
+    ilist.pop_front();
+}
+````
+
+**在容器的中间部分移除元素**
+
 ### 9.3.4 特定于 `forward_list` 的操作
 ### 9.3.5 resize 容器大小
 ### 9.3.6 容器操作会使得迭代器失效
