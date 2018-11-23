@@ -103,7 +103,7 @@ Sales_data& Sales_data::combine(const Sales_data &rhs)
 struct Sales_data {
     Sales_data() = default;
 };
-Sales_data:Sales_data() = default;
+Sales_data::Sales_data() = default;
 ````
 这种形式的默认构造函数执行与编译器合成的默认构造函数一样的功能。通过在参数列表后加上 `= default` 将要求编译器为我们生成默认构造函数。`=default` 可以出现在类内的声明处，或者出现在函数定义处。定义在类内则合成的默认构造函数自动称为内联的，定义在类外则是非内联的。这两种形式的差异还在于定义在类外的函数是用户提供（user-provided）的构造函数。用户提供的构造函数在对象是值初始化时，将执行默认初始化。而编译器生成的默认构造函数，在值初始化时，将先执行零初始化再执行默认初始化。
 
