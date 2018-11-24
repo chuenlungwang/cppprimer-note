@@ -440,13 +440,188 @@ void fcn4()
 
 **指定 lambda 的返回类型**
 
-
+目前我们所些的 lambda 只有一个 return 语句。因而我们不需要指定返回类型。如果 lambda 函数体中包含了任何不是 return 语句的话，那么 lambda 将被推断为返回 void。推断为返回 void 的 lambda 不会返回任何值。如：
+````cpp
+transform(vi.begin(), vi.end(), vi.begin(), [](int i) -> int {
+    if (i < 0)
+        return -i;
+    else
+        return i;
+});
+````
+transform 将输入序列中的每个元素通过调用 lambda 进行转换，并将结果存储到其目的迭代器所表示的序列中。目的序列和输入序列可以是同一个。由于这里的 lambda 中语句多于一条，我们必须指定其返回值。
 
 ### 10.3.4 绑定实参
+
+lambda 表达式对于只用于一两个地方的简单操作非常有用。如果我们需要将相同的操作用于多个地方的话，我们应该定义函数而不是重复相同的 lambda 表达式。同样，如果操作比较复杂的话，最好是定义函数。
+
+对于没有捕获列表的 lambda 表达式很容器用函数来替换。然而，想用函数来替换捕获了本地变量的 lambda 就有难度了。如：
+````cpp
+bool check_size(const string &s, string::size_type sz)
+{
+    return s.size() >= sz;
+}
+````
+想将 `check_size` 函数用于 `find_if` 肯定是不行的，`find_if` 要求函数只能接收一个参数。为了能够传递 `check_size` 必须要进行参数绑定。
+
+**标准库 bind 函数**
+
+使用定义了 functional 头文件中的 bind 函数。bind 可以被认为是通用的函数适配器（function adaptor）。它接收一个可调用对象并产生一个新的可调用对象，其中改变了原始函数的参数列表。bind 的通用形式是：
+````cpp
+auto newCallable = bind(callable, arg_list);
+````
+其中 newCallable 是一个可调用对象，`arg_list` 是逗号分隔的参数并与给定的 callable 中的参数一一对应。也就是说，当我们调用 newCallable 时，newCallable 将调用 callable，并传递参数列表 `arg_list`。
+
+参数列表 `arg_list` 可以包含形式为 `_n` 的名字，其中 n 是一个整数。这种形式的参数称之为 “占位符”（placeholder），表示 newCallable 的形参列表。意味着当我们调用 newCallable 并传递给其多个参数，这些参数会被填值到 `_1` `_2` `_3` 并以 `arg_list` 的顺序传递给 callable 可调用对象。传递给 newCallable 的参数个数与占位符的个数一样多。
+
+**将 sz 绑定到 `check_size` 上**
+
+以下是给 `check_size` 绑定一个固定的 sz 参数：
+````cpp
+auto check6 = bind(check_size, _1, 6);
+````
+这个例子中 bind 只有一个占位符，意味着 check6 有一个参数。占位符出现在 `arg_list` 的第一个位置，意味着 check6 的参数对应于 `check_size` 的第一个参数。这个参数的类型是 `const string&`，意味着 check6 中的参数也是 `const string&`。那么当调用 check6 时就必须传递类型为 string 的参数，check6 会将其传递给 `check_size` 的第一个参数。
+
+`arg_list` 中的第二个参数是值 6，这个值被绑定到 `check_size` 的第二个参数上，无论任何时候我们调用 check6，它都会将 6 传递给 `check_sz` 的第二个参数：
+````cpp
+string s = "hello";
+bool b1 = check6(s); // check6(s) 调用 check_size(s, 6)
+````
+使用 bind 可以替换原来的 lambda 版本的 `find_if`：
+````cpp
+auto wc = find_if(words.begin(), words.end(), bind(check_size, _1, sz));
+````
+bind 的调用生成了一个新的可调用对象，并将 `check_size` 的第二个参数绑定到值 sz 上。当 `find_if` 调用此对象时将会用 string 和 sz 调用 `check_size`。
+
+**使用 placeholders 名称空间**
+
+名字 `_n` 定义在名称空间 placeholders 中，这个名称空间本身被嵌套在 std 名称空间中。用 using 声明可以简写占位符的名字：`using std::placeholders::_1;` 。
+
+如果嫌麻烦的话，就在函数中使用 using 指令（using directive）：`using namespace std::placeholders;` ，using 指令将使得 std::placeholders 中的名字都可见，这样就不需要再使用完全限定名了。
+
+与 bind 函数一样，placeholders 名称空间定义在 functional 头文件中。
+
+**bind 的参数**
+
+bind 函数可以用于固定参数的值。甚至，bind 还可以用于重排序参数。如：
+````cpp
+auto g = bind(f, a, b, _2, c, _1);
+````
+将产生一个有两个参数的新的可调用对象 g。其中 g 的第一个参数被传递给 f 的第五个参数，g 的第二个参数将被传递给 f 的第四个参数。效果相当于 `g(_1, _2)` 与 `f(a, b, _2, c, _1)` 一样，当调用 `g(X, Y)` 时与 `f(a, b, Y, c, X)` 效果一样。
+
+还有 bind 可以对一个函数的参数进行重排序，如：
+````cpp
+sort(words.begin(), words.end(), isShorter);
+sort(words.begin(), words.end(), bind(isShorter, _2, _1));
+````
+在第一个调用中，sort 调用的正常的 isShorter ，其含义是较短的字符串在前面。第二个调用中，sort 调用的反向的 isShorter ，其含义是较长的字符串在前面。
+
+**绑定引用形参**
+
+通常调用 bind 时，非占位符参数时拷贝到生成的调用对象中的。然而有时我们希望这个参数是按引用绑定的。如：
+````cpp
+ostream &print(ostream &os, const string &s, char c)
+{
+    return os << s << c;
+}
+````
+由于 os 不能被拷贝，所以不能直接 bind 这个参数。如果想要以引用方式进行绑定需要调用 ref 函数：
+````cpp
+for_each(words.begin(), words.end(), bind(print, ref(os), _1, ' '));
+````
+ref 将返回一个对象其本身是可以被拷贝的，然而它的内部包含了给定参数对象的引用。同时还有一个 cref 函数用于生成一个类以容纳 const 引用。ref 和 cref 都定义在 functional 头文件中。
+
+**向后兼容：绑定参数**
+
+早期的 C++ 版本对于绑定参数到函数有诸多限制，并且更加复杂。标准库定义了 bind1st 和 bind2nd，在新标准下应该使用 bind 函数。
+
 ## 10.4 再谈迭代器
+
+除了定义在每个容器中的迭代器，标准库还在 iterator 头文件中定义了几种别的迭代器：
+
+- 插入迭代器（Insert iterators）：这些迭代器绑定到容器上，并且可用于往容器中插入元素；
+- 流迭代器（Stream iterators）：这些迭代器绑定到输入输出流上，并可用于迭代相关的 IO 流；
+- 反向迭代器（Reverse iterators）：这些迭代器向后移动而不是向前移动，除了 `forward_list` 之外都提供反向迭代器；
+- 移动迭代器（Move iterators）：特殊的迭代器用于移动元素而不是拷贝；
+
 ### 10.4.1 插入迭代器
+
+插入器（inserter）是一个迭代器适配器，以一个容器为参数，生成一个可以插入元素的迭代器。当通过插入迭代器赋值时，迭代器将调用容器的操作添加一个元素到指定的位置。这些迭代器支持的操作包括：
+
+- `it = t` 插入值到 it 所表示的当前位置，根据不同种类的插入迭代器，可能会调用容器的 `push_back` ，`push_front` 或 insert 方法；
+- `*it` `++it` `it++` 这些操作存在当不做任何事情，每次都是返回 it 本身；
+
+有三种不同种类的插入器。它们之间的区别在于元素插入到哪个位置：
+- `back_inserter()` 这个迭代器调用容器的 `push_back`；
+- `front_inserter()` 这个迭代器调用容器的 `push_front`;
+- `inserter()` 这个迭代器调用 insert，`inserter` 有第二个参数，并且这个参数必须是容器中的迭代器。元素被插入到给定迭代器所表示的元素前面；
+
+只有容器有 `push_front` 函数时才能使用 `front_inserter` ，同样只有容器有 `push_back` 时才能使用 `back_inserter`。
+
+需要理解的是当调用 `inserter(c, iter)` 时，如果连续向其赋值会把元素顺序的插入到这个迭代器所表示的元素之前。而 `front_inserter` 生成的迭代器的行为与 inserter 生成的迭代器有很大的不同。当使用 `front_inserter` 时，元素总是被插入到首元素之前，意味着后面插入的元素在前面插入的元素之前。而 inserter 生成的迭代器刚好相反，后面插入的元素在前面插入的元素之后。如：
+````cpp
+list<int> lst = {1,2,3,4};
+list<int> lst2, lst3;
+// copy 完成后，lst2 的内容是 4 3 2 1
+copy(lst.cbegin(), lst.cend(), front_inserter(lst2));
+// copy 完成后，lst2 的内容是 1 2 3 4
+copy(lst.cbegin(), lst.cend(), inserter(lst3, lst3.begin()));
+````
+
 ### 10.4.2 iostream 迭代器
-### 10.4.3 反转迭代器
+
+尽管 iostream 类型不是容器，依然可以在 IO 类型上使用迭代器。`istream_iterator` 读取输入流，`ostream_iterator` 写输出流。这些迭代器将其对应的流当作特定类型元素的序列。使用流迭代器，我们可以使用通用算法对流对象进行读写。
+
+以下是 `istream_iterator` 的操作：
+
+- `istream_iterator<T> in(is);` in 从 is 中读取类型 T 的值；
+- `istream_iterator<T> end;` in 的尾后迭代器；
+- `in1 == in2` `in1 != in2` in1 和 in2 必须读取相同类型的值。它们只有都是 end 值或者绑定到同一个输入流上时才相等；
+- `*in` 返回从流中读取到值；
+- `in->mem` 与 `(*in).mem` 含义相同，访问读取到的值的成员 mem；
+- `++in` `in++` 从流中读取下一个值，使用的操作符是元素成员的 `>>` 操作符。前置版本返回自增后的迭代器，后置版本返回旧的迭代器；
+
+当创建流迭代器时，需要指定元素的类型。`istream_iterator` 使用 `>>` 读取流。因而这个元素类型必须要有 `>>` 操作符才行。在创建 `istream_iterator` 时我们可以将其绑定到一个流上，或者当默认初始化时，创建的迭代器被当作尾后值。如：
+````cpp
+istream_iterator<int> int_it(cin);
+istream_iterator<int> int_eof;
+ifstream in("afile");
+istream_iterator<string> str_it(in);
+````
+只有当要给迭代器绑定的流到达了文件尾部或者遇到了 IO 错误时才会等于 end 迭代器。以下是利用 `istream_iterator` 读取流中的数据并存储到 vector 中：
+````cpp
+istream_iterator<int> in_iter(cin);
+istream_iterator<int> eof;
+while (in_iter != eof)
+    vec.push_back(*in_iter++);
+````
+以及用 `istream_iterator` 用于初始化 vector：
+````cpp
+istream_iterator<int> in_iter(cin), eof;
+vector<int> vec(in_iter, eof);
+````
+
+**将流迭代器用于算法**
+
+由于算法是在迭代器上进行的，并且流迭代器支持一些迭代器操作。算法是按照迭代器分类决定哪些迭代器是可以用于此算法的。如 accumulate 可以用于一对 `istream_iterator`：
+````cpp
+istream_iterator<int> in(cin), eof;
+cout << accumulate(in, eof, 0) << endl;
+````
+
+**`istream_iterator` 允许延迟计算**
+
+当将 `istream_iterator` 绑定到流时，并没有说会立即读取这个流。实现会推迟到使用迭代器时才读取流。标准库保证当第一次解引用迭代器前，流是被读取了的。对于大部分程序来说，是立即读取还是延迟读取是没有关系的。然而，如果在同一个流上同时绑定了两个迭代器，此时就要当心了。
+
+以下是 `ostream_iterator` 的操作：
+
+- `ostream_iterator<T> out(os);` out 将类型 T 的值写入到输出流 os 中；
+- `ostream_iterator<T> out(os, d);` out 将类型 T 的值和 d 一起写入到输出流 os 中，d 是一个 C 风格字符串的指针，每次写入时 d 都在 T 值的前面；
+- `out = val;` 将 val 通过 out 写入到其绑定的输出流中，使用的 val 的 `<<` 操作符。val 的类型必须与 out 可写的对象类型相兼容；
+- `*out` `++out` `out++` 这些操作存在但是没有做什么事，每个操作都返回 out；
+
+### 10.4.3 反向迭代器
+
 ## 10.5 通用算法的分类
 ### 10.5.1 按照5种迭代器分类
 ### 10.5.2 按照算法的参数模式分配
