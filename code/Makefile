@@ -23,7 +23,10 @@ EXECUTABLES := noexcept array constexpr_class namespace_class \
 	overview_of_algorithms \
 	lambda \
 	bind \
-	iterator
+	iterator \
+	word_count \
+	pair \
+	associative_container \
 
 BUILD_PATH = build
 
