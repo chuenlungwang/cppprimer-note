@@ -9,7 +9,7 @@ std::string ShowBackStageCls::prettyName()
     return os.str();
 }
 
-ShowBackStageCls::ShowBackStageCls(std::string objName):
+ShowBackStageCls::ShowBackStageCls(const std::string &objName):
     _objName(objName)
 {
     this->_id = ++ShowBackStageCls::ref;

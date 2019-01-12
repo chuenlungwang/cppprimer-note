@@ -5,7 +5,7 @@
 
 class ShowBackStageCls {
 public:
-    ShowBackStageCls(std::string objName = "default");
+    ShowBackStageCls(const std::string &objName = "default");
     ShowBackStageCls(const ShowBackStageCls &rsh);
     ~ShowBackStageCls();
 private:
