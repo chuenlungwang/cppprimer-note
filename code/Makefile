@@ -1,4 +1,3 @@
-
 .PHONY : all clean
 
 EXECUTABLES := noexcept array constexpr_class namespace_class \
@@ -28,16 +27,20 @@ EXECUTABLES := noexcept array constexpr_class namespace_class \
 	pair \
 	associative_container \
 
+OBJS := ShowBackStageCls
+
 BUILD_PATH = build
 
 all : \
-	$(foreach v, $(EXECUTABLES), $(BUILD_PATH)/$(v).exe)
+	$(foreach v, $(EXECUTABLES), $(BUILD_PATH)/$(v).exe) \
+	$(foreach v, $(OBJS), $(BUILD_PATH)/$(v).o) \
+	$(BUILD_PATH)/use_ShowBackStageCls.exe
 
 CXX := g++
 CXXFLAGS += -std=c++11 -Wall
 
 $(BUILD_PATH) :
-	mkdir $(BUILD_PATH)
+	@mkdir $(BUILD_PATH)
 
 define COMPILE_template
   $$(BUILD_PATH)/$(1).exe : $(1).cc | $$(BUILD_PATH)
@@ -45,6 +48,16 @@ define COMPILE_template
 endef
 
 $(foreach v, $(EXECUTABLES), $(eval $(call COMPILE_template,$(v))))
+
+define COMPILE_obj_template
+$$(BUILD_PATH)/$(1).o : $(1).cc | $$(BUILD_PATH)
+	$$(CXX) $$(CXXFLAGS) -c $$^ -o $$(@)
+endef
+
+$(foreach v, $(OBJS), $(eval $(call COMPILE_obj_template,$(v))))
+
+$(BUILD_PATH)/use_ShowBackStageCls.exe : use_ShowBackStageCls.cc $(BUILD_PATH)/ShowBackStageCls.o
+	$(CXX) $(CXXFLAGS) $(^) -o $(@)
 
 clean:
 	rm -rf $(BUILD_PATH)
