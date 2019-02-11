@@ -339,12 +339,104 @@ find 返回与给定 key 关联的第一个元素的迭代器。标准库保证�
 
 **迭代器方式的解决方案**
 
+另一种选择是使用 `lower_bound` 和 `upper_bound` 来解决问题。这两个操作都以 key 为参数并返回一个迭代器。如果 key 在容器中，由 `lower_bound` 返回的迭代器将会指向与 key 关联的第一个元素，而由 `upper_bound` 返回的迭代器则指向与 key 关联的最后一个元素的后一个位置。如果元素不在 multimap 钟，那么 `lower_bound` 和 `upper_bound` 将返回相等的迭代器；两个都将返回一个迭代器指向 key 可以合适插入的位置（插入后依然保持有序）。因此，调用 `lower_bound` 和 `upper_bound` 于相同的 key 上时，将产生与此 key 关联的所有元素的迭代器范围。
+
+当然，这两个操作返回的迭代器可能是容器的尾后迭代器（off-the-end iterator）。如果查找的 key 在容器中是最大的，那么 `upper_bound` 将返回尾后迭代器。如果 key 不在容器中且比容器中任何键都大，那么 `lower_bound` 将返回尾后迭代器。
+
+注意：`lower_bound` 返回的迭代器可能不会指向指定 key 所关联的元素。如果 key 不在容器中，那么 `lower_bound` 将返回一个表示这个 key 可以插入的位置的迭代器，当插入之后元素的顺序将保持不变。
+
+使用这两个操作，我们可以重写程序为：
+````cpp
+for (auto beg = authors.lower_bound(search_item),
+          end = authors.upper_bound(search_item);
+     beg != end; ++beg) {
+         cout << beg->second << endl;
+}
+````
+这两个操作不会告知 key 是否在容器中，其重要之处在于返回值的行为与迭代器范围（iterator range）一样。如果这个 key 没有关联的元素，那么 `lower_bound` 和 `upper_bound` 的返回值相同。两个结果都指向 key 插入的位置。
+
+假如有元素与这个 key 关联，beg 将指向第一个元素。通过递增 beg 可以遍历与这个 key 关联的元素。迭代器 end 表示我们已经遍历了所有的元素，当 beg 和 end 相等时，就表示我们已经遍历了全部的元素。
+
+注意：当 `lower_bound` 和 `upper_bound` 返回相同的迭代器，表示给定的 key 不在容器中。
+
 **`equal_range` 函数**
+
+剩下的解决方案是最直接的：相较于调用 `upper_bound` 和 `lower_bound`，我们可以调用 `equal_range`。这个函数以一个 key 为参数并返回一个 pair 类型以包含 iterator，如果 key 存在于容器中，那么 first 表示与键关联的第一个元素，second 表示与 key 关联的最后一个元素的下一个位置。如果没有匹配的元素，两个迭代器都指向 key 插入的位置。我们可以用 `equal_range` 再次修改程序：
+````cpp
+for (auto pos = authors.equal_range(search_item);
+     pos.first != pos.second; ++pos.first) {
+         cout << pos.first->second << endl;
+     }
+````
+`equal_range` 的返回值 pair 中的 first 成员包含的迭代器与 `lower_bound` 的返回值一样，second 成员与 `upper_bound` 函数的返回值一样。因此，在这个程序中，`pos.first` 与 `beg` 是一样的，`pos.second` 与 `end` 是一样的。
 
 ## 11.4 无序容器
 
+在新标准中定义四个无序关联容器（unordered associative containers）。相较于前面的关联容器使用比较操作（comparison operation）来组织元素，这些容器使用的哈希函数（hash function）以及 key 类型的相等比较操作符。无序容器最常用于 key 类型没有明显的顺序关系的情形。这些容器也用于那些维护元素的顺序是很昂贵的应用。
+
+尽管哈希在原则上可以达到更好的平均性能，想要在实践中达到好的结果通常需要一些性能上的测试和调整。因而，通常使用有序容器更加容器且通常拥有更好的性能。
+
+提示：仅仅在 key 类型天生是不可排序的，或者性能测试显示哈希可以解决问题时才使用无序容器。
+
 **使用无序容器**
+
+除了管理哈希的操作之外，无序容器提供与有序容器一样的操作（find，insert 和别的操作）。意味着用于 map 和 set 的操作同样可以用于 `unordered_map` 和 `unordered_set` 容器。对于 multi 的无序容器也是一样的，有序容器的所有操作都可以用于无序容器。
+
+因而，我们通常使用无序容器来替换相应的有序容器，或者执行相反的替换。然而，由于元素不是有序存储的，使用无序容器的输出与使用有序容器的相同程序的输出通常是不一样的。
 
 **管理 bucket**
 
+无序容器被组织为一系列桶（bucket），每个桶中装有零个或多个元素。这些容器使用哈希函数（hash function）来将元素映射到桶上。为了访问元素，容器首先计算元素的哈希值（hash code），用以得到需要搜索的桶。容器将所有哈希值相同的元素都放在一个相同的桶中。如果容器允许一个给定的 key 有多个元素与之相关联，那么这些关联的元素都在同一个桶中。因而，无序容器的性能取决于哈希函数的质量以及桶的数量（number）和大小（size）。
+
+其中哈希函数必须对于相同的参数总是产生相同的结果。理想情况下，哈希函数将每个特定的值映射到独一无二的桶上。然而，一个哈希函数允许将多个不同的 key 的元素映射到相同的桶上。当一个桶中有多个元素时，这些元素将被顺序查找以发现我们想要的那一个。通常情况下，计算元素的哈希值和查找其 bucket 是很快的操作。然而，如果桶中有很多元素，将需要非常多的比较操作来找到那个特定的元素。
+
+无序容器提供了一系列函数用于管理 bucket。这些成员函数让我们可以查询容器的状态以及强制容器在需要时重新组织。
+
+**Table 11.8 无序容器管理操作**
+
+**Bucket Interface**
+
+- `c.bucket_count()` 查询正在使用的 bucket 的个数；
+- `c.max_bucket_count()` 这个容器可以容纳的 bucket 的最大数目；
+- `c.bucket_size(n)` n 号桶容纳的元素的个数；
+- `c.bucket(k)` 返回键 k 可能被找到的桶，类型是`size_type`
+
+**Bucket 迭代器**
+
+- `local_iterator` 可以访问 bucket 中的元素的迭代器类型；
+- `const_local_iterator` bucket iterator 的 const 版本；
+- `c.begin(n)` `c.end(n)` bucket n 中的首元素迭代器以及尾后元素迭代器；
+- `c.cbegin(n)` `c.cend(n)` 上一条目中的 const 版本迭代器；
+
+**hash 策略**
+
+- `c.load_factor()` 每个 bucket 中的平均元素个数，返回值是 float 类型；
+- `c.max_load_factor()` c 试图维护的桶的平均大小。c 会增加桶的数量以维护 `load_factor <= max_load_factor`，返回值是 float 类型；
+- `c.rehash(n)` 重新调整存储从而 `bucket_count >= n` 并且 `bucket_count > size/max_load_factor`，如果 n 大于容器的当前桶的数目（`bucket_count`），rehash 将强制执行，新的桶数目将大于或等于 n，如果 n 小于容器的当前桶的数目那么这个函数可能没有任何作用；
+- `c.reserve(n)` 重新调整存储从而 c 可以包含 n 个元素而不需要 rehash；
+
 **无序容器的 key 类型要求**
+
+默认情况下，无序容器使用相等操作符于键类型上来比较元素。它们使用 `hash<key_type>` 类型的对象来产生每个元素的哈希值。标准库提供了内置类型（包括指针）的 hash 模板来产生哈希值。标准库同时还定义了一些库类型的 hash 模板，包括 string 类型和智能指针类型。因而，我们可以直接定义内置类型或者 string 或智能指针的无序容器。
+
+然而，我们不能直接定义我们自己的类类型作为键的无序容器。与容器不一样，我们不能直接使用 hash 模板。相反，我们必须提供自己的 hash 模板版本，在 16.5 中将介绍使用类模板特例化（class template specializations）来提供自己的 hash 模板版本。
+
+除了使用默认的 hash 模板之外，我们还可以提供自己的相等比较函数和计算哈希值的函数。这个技术在 11.2.2 中使用过。如：
+````cpp
+size_t hasher(const Sales_data &sd)
+{
+    return hash<string>()(sd.isbn());
+}
+bool eqOp(const Sales_data &lhs, const Sales_data &rhs)
+{
+    return lhs.isbn() == rhs.isbn();
+}
+
+using SD_multiset = unordered_multiset<Sales_data, decltype(hasher)*, decltype(eqOp)*>;
+
+SD_multiset bookstore(42, hasher, eqOp);
+````
+上面的代码同时指定了 hash 函数和相等性比较函数，如果我们的类有自己的 `==` 操作符，可以仅仅只覆盖哈希函数：
+````cpp
+unordered_set<Foo, decltype(FooHash)*> fooSet(10, FooHash);
+````
