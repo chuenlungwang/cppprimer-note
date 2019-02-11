@@ -397,7 +397,7 @@ find_if(svec.begin(), svec.end(), fp);
 
 一种从成员函数指针中获取可调用对象的方式是使用 function 模板。如：
 ````cpp
-function<bool (const string&) fcn = &string::empty;
+function<bool (const string&)> fcn = &string::empty;
 find_if(svec.begin(), svec.end(), fcn);
 ````
 通常，成员函数所在的对象是通过隐式参数 this 传递的，当用 function 来为成员函数产生可调用对象时，this 隐式参数转为显式参数。当 function 对象包含一个成员函数指针时，它会使用成员指针访问符（`.*` 和 `->*`）来对传入的对象进行成员函数指针调用。

@@ -26,6 +26,9 @@ EXECUTABLES := noexcept array constexpr_class namespace_class \
 	word_count \
 	pair \
 	associative_container \
+	rvalue_reference \
+	explict_cast \
+	new_align \
 
 OBJS := ShowBackStageCls
 
