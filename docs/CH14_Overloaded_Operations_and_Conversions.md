@@ -185,7 +185,7 @@ istream &operator>>(istream &is, Sales_data &item)
 
 将对象置于一种有效的状态，将保护那些忽略了输入错误可能性的用户。对象将依然处于可用的状态，类似的，对象不会导致误导的结果，这是因为数据是内在一致的。
 
-**最佳实践：**输入操作符应该决定在错误发生时采取生么措施进行错误恢复。
+**最佳实践**输入操作符应该决定在错误发生时采取生么措施进行错误恢复。
 
 **指示发生的错误**
 
@@ -230,7 +230,7 @@ bool operator!=(const Sales_data &lhs, const Sales_data &rhs)
 - 如果一个类定义了 `operator==`，那么它通常应该定义 `operator!=`，两者是相互依存的；
 - 相等或不等操作符应该将其工作交给另外一个去完成。意味着，其中一个操作符将做真正的比较对象的操作，而另外一个应该调用这个来完成其工作；
 
-**最佳实践：**如果一个类具有逻辑上的相等比较操作通常应该定义 `operator=`，类定义 `==` 将使得其容易与通用算法一起使用。
+**最佳实践** 如果一个类具有逻辑上的相等比较操作通常应该定义 `operator=`，类定义 `==` 将使得其容易与通用算法一起使用。
 
 ### 14.3.2 关系操作符
 
@@ -243,7 +243,7 @@ bool operator!=(const Sales_data &lhs, const Sales_data &rhs)
 
 对于像 `Sales_data` 这种没有逻辑上的 `<` 概念的类型，最好是不要定义关系操作符。
 
-**最佳实践：**如果存在 `<` 操作的单一逻辑上的定义，那么通常我们应该定义 `<` 操作符。然而，如果类同时有 `==`，只有在 `<` 和 `==` 操作符产生一致的结果时才重载 `<` 操作符。
+**最佳实践**如果存在 `<` 操作的单一逻辑上的定义，那么通常我们应该定义 `<` 操作符。然而，如果类同时有 `==`，只有在 `<` 和 `==` 操作符产生一致的结果时才重载 `<` 操作符。
 
 ## 14.4 赋值操作符
 
@@ -287,7 +287,7 @@ Sales_data &Sales_data::operator+=(const Sales_data &rhs)
   return *this;
 }
 ````
-**最佳实践：**赋值操作符必须是成员，复合赋值操作符应该是成员。这些操作符应该返回左边操作数的引用。
+**最佳实践**赋值操作符必须是成员，复合赋值操作符应该是成员。这些操作符应该返回左边操作数的引用。
 
 ## 14.5 下标操作符
 
@@ -295,7 +295,7 @@ Sales_data &Sales_data::operator+=(const Sales_data &rhs)
 
 为了兼容常规的下标操作符的含义，重载下表操作符通常返回获取的元素的引用。通过返回引用，下标操作可以用于赋值操作的任何一边。因而，同时定义 const 和非 const 版本的操作符是一个好的主意。当运用于 const 对象时，下标操作应该应该返回一个 const 引用，那么就不能对返回的对象进行赋值。
 
-**最佳实践：**当一个类有下标操作符时，它通常应该定义两个版本：一个返回非 const 引用，另一个是 const 成员并返回 const 引用。如：
+**最佳实践**当一个类有下标操作符时，它通常应该定义两个版本：一个返回非 const 引用，另一个是 const 成员并返回 const 引用。如：
 ````cpp
 class StrVec {
 public:
@@ -314,7 +314,7 @@ private:
 
 对于内置类型，同时存在前置和后置版本的自增和自减操作符。我们同样也能同时为类类型定义前置和后置的版本。
 
-**最佳实践：**定义自增和自减操作符的类应该同时定义前置和后置版本。这些操作符通常应该被定义为成员。
+**最佳实践**定义自增和自减操作符的类应该同时定义前置和后置版本。这些操作符通常应该被定义为成员。
 
 **定义前置自增/自减操作符**
 
@@ -326,7 +326,7 @@ public:
   StrBlobPtr &operator--();
 };
 ````
-**最佳实践：**为了与内置类型操作符保持一致，前置操作符应该返回自增后或者自减后的对象的引用。
+**最佳实践**为了与内置类型操作符保持一致，前置操作符应该返回自增后或者自减后的对象的引用。
 
 **区别前置和后置操作符**
 
@@ -340,9 +340,9 @@ public:
   StrBlobPtr operator--(int);
 };
 ````
-**最佳实践：**为了与内置类型操作符保持一致，后置操作符应该返回旧的（未自增或者未自减）的值。这个值将作为值返回而不是引用。
+**最佳实践**为了与内置类型操作符保持一致，后置操作符应该返回旧的（未自增或者未自减）的值。这个值将作为值返回而不是引用。
 
-**注意：**int 参数没有被使用，所以我们没有给其一个名字。
+**注意**int 参数没有被使用，所以我们没有给其一个名字。
 
 **显式调用后置操作符**
 
@@ -368,7 +368,7 @@ public:
 ````
 箭头操作符通过调用解引用操作符并返回那个操作符的返回元素的地址来避免做任何实际的工作。
 
-**注意：**箭头操作符必须是成员。解引用操作符就没有要求必须是成员，但通常应该被定义为成员。
+**注意**箭头操作符必须是成员。解引用操作符就没有要求必须是成员，但通常应该被定义为成员。
 
 这里值得注意的是我们将这些操作符定义为 const 成员。不像自增和自减操作符，获取成员不会改变 StrBlobPtr 自身的状态。同样需要注意的是这些操作符返回一个非 const string 对象的引用或指针。它们这样做的原因在于我们知道 StrBlobPtr 只能绑定到非 const StrBlob 对象上。以下是使用过程：
 ````cpp
@@ -393,7 +393,7 @@ point.operator->()->mem; // point 是类类型对象
 1. 如果 `point` 是指针，那么内置箭头操作符将被运用，意味着这个表达式等价于 `(*point).mem`，指针被解引用并且指定的成员从结果对象中取出。如果 point 指向的类型没有名字为 mem 的成员，那么代码将发生错误；
 2. 如果 point 是一个定义了 `operator->` 的类对象，那么 `point.operator->()` 的结果将被用于获取 mem。如果结果是一个指针，那么从在这个指针上执行步骤1。如果结果是一个自身重载了 `operator->()` 对象，那么步骤2将在那个对象上重复。这个过程一直持续到要么得到一个对象（这个对象有指定的成员）的指针，要么返回一个其它的值，这第二种情况下代码是错误的。
 
-**注意：**重载的箭头操作符必须要么返回一个类类型的指针要么是一个定义了自己的箭头操作符的类类型对象。
+**注意**重载的箭头操作符必须要么返回一个类类型的指针要么是一个定义了自己的箭头操作符的类类型对象。
 
 ## 14.8 函数调用操作符
 
@@ -415,27 +415,231 @@ int ui = absObj(i); //将 i 传递给 absObj.operator()
 ````
 尽管 absObj 是一个对象不是函数，我们可以“调用”这个对象。调用一个对象将运行其重载的调用操作符。在这种情况下，这个操作符取一个 int 值，并返回其绝对值。
 
-**注意：**函数调用操作符必须是成员函数。一个类型可以定义多个调用操作符版本，其中每一个必须在参数的个数或类型不一样。
+**注意**函数调用操作符必须是成员函数。一个类型可以定义多个调用操作符版本，其中每一个必须在参数的个数或类型不一样。
 
 定义了调用操作符的类对象被称为函数对象（function objects），这种对象“在行为上类似于函数”，因为我们可以调用它们。
 
 **具有状态的函数对象类（Function-Object Classes with State）**
 
+与别的类一样，函数对象类除了 `operator()` 外，可以有额外的成员。函数对象类经常包含数据成员用于定制调用操作符。如我们可以在调用函数时提供不同的分割符，我们可以如下定义类：
+````cpp
+class PrintString {
+public:
+  PrintString(ostream &o = cout, char c = ' '): os(o), sep(c) { }
+  void operator() (const string &s) const {
+    os << s << sep;
+  }
+  private:
+    ostream &os;
+    char sep;
+};
+````
+这个类的构造函数以输出流的引用和一个字符作为分割符。它使用 cout 和空格作为默认的实参。调用操作符的函数体则使用这些成员来定义给定的 string 对象。
+
+当我们定义 PrintString 对象时，我们可以使用默认的或者提供我们自己的分割符或者输出流：
+````cpp
+PrintString printer;
+printer(s);
+PrintString errors(cerr, '\n');
+errors(s);
+````
+函数对象最长用于通用算法的实参。我们可以将 PrintString 的对象传递给 `for_each` 算法来打印容器中的内容：
+````cpp
+for_each(vs.begin(), vs.end(), PrintString(cerr, '\n'));
+````
+
 ### 14.8.1 Lambdas 是函数对象
+
+上面的小节中，我们使用了 PrintString 对象作为实参来调用 `for_each`，这个用法类似于我们在 §10.3.2 中使用的 lambda 表达式。当我们写 lambda 时，编译器将其翻译成一个匿名类的匿名对象（unnamed object of an unnamed class）。这个类从 lambda 中产生并包含一个函数调用操作符。如：
+````cpp
+stable_sort(words.begin(), words.end(),
+  [](const string &a, const string &b) {
+    return a.size() < b.size();
+  }
+);
+````
+将表现得类似于下面的类的匿名对象：
+````cpp
+class ShorterString {
+public:
+  bool operator()(const string &s1, const string &s2) const
+  { return s1.size() < s2.size(); }
+};
+````
+这个生成的类只有一个成员 —— 函数调用操作符，它以两个 string 为参数并比较它们的长度。如我们在 §10.3.3 中所见，默认情况下 lambda 不会改变其捕获变量。因而，默认情况下由 lambda 生成的类的函数调用操作符是一个 const 成员函数。如果 lambda 被声明为 mutable，那么调用操作符将不是 const 的。
 
 **表示具有捕获值的 lambda 的类**
 
+正如我们所见，当一个 lambda 按照引用捕获一个变量时，将有程序保证被引用的变量在 lambda 执行时依然存在。这样编译器就允许直接使用引用而不需要将引用作为数据成员存储在生成的类中。
+
+作为比较，如果变量是按照值捕获的则被拷贝到 lambda 中。因而，从 lambda 中生成的类将有数据成员与每个值捕获的变量对应。这些类还有一个构造函数来初始化这些数据成员，其值来自于捕获的变量。如：
+````cpp
+auto wc = find_if(words.begin(), words.end(), [sz](const string &a) { return a.size() > sz; });
+````
+将产生如下类的代码：
+````cpp
+class SizeComp {
+public:
+  SizeComp(size_t n): sz(n) { }
+  bool operator()(const string &s) const {
+    return s.size() >= sz;
+  }
+private:
+  size_t sz;
+};
+````
+不像我们的 ShorterString 类，这个类有一个数据成员以及一个构造函数来初始化这个成员。这个合成的类没有默认构造函数；为了使用这个类，我们必须传递参数：
+````cpp
+auto wc = find_if(words.begin(), words.end(), SizeComp(sz));
+````
+从 lambda 表达式中生成的类有一个被删除的默认构造函数、被删除的赋值操作符以及默认析构函数。类是否有默认或删除的拷贝/移动构造函数取决于捕获的数据成员的类型，这与普通类的规则是一样的。
+
 ### 14.8.2 标准库中的函数对象
+
+标准库定义一系列类来表示算术、关系和逻辑操作符。每个类定义了一个调用操作符以运用其类名所表示的操作。比如，`plus` 类有一个调用操作符来运用 `+` 于一对操作数；`modulus` 类定义了一个调用操作符以运用 `%` 操作符；`equal_to` 类运用 `==`；等等。
+
+这些类都是需要提供一个类型的类模板。这些类型指定了调用操作符的参数的类型。比如，`plus<string>` 运用 string 的加操作符于 string 对象；`plus<int>` 的操作数是 int；`plus<Sales_data>` 将 `+` 运用于 `Sales_data` 对象；等等；
+````cpp
+plus<int> intAdd; //可以对两个 int 值做加法的函数对象
+negate<int> intNegate; //可以对一个 int 取反的函数对象
+int sum = intAdd(10, 20); // == 30
+sum = intNegate(intAdd(10, 20)); // == -30
+sum = intAdd(10, intNegate(10)); // == 0
+````
+
+以下是定义于 functional 头文件中的类型：
+
+**算术运算**
+
+`plus<Type>` `minus<Type>` `multiplies<Type>` `divides<Type>` `modulus<Type>` `negate<Type>`
+
+**关系比较**
+
+`equal_to<Type>` `not_equal_to<Type>` `greater<Type>` `greater_equal<Type>` `less<Type>` `less_equal<Type>`
+
+**逻辑运算**
+
+`logical_and<Type>` `logical_or<Type>` `logical_not<Type>`
 
 **使用标准库函数对象于通用算法**
 
+表示操作符的函数对象类经常被用于重载算法所使用的默认操作符。如我们所知，默认情况下，排序算法使用 `operator<` 来将序列排序为升序序列。为了按照降序排列，我们可以传递一个 greater 类型的对象。这个类将生成一个调用操作符以调用底层元素类型的 `operator>` ，如：
+
+````cpp
+sort(svec.begin(), svec.end(), greater<string>());
+````
+这里第三个参数是一个类型为 `greater<string>` 的匿名对象。当 sort 比较元素时，不是使用 `operator<` 而调用给定 greater 函数对象。那个对象将运用 string 元素的 `>` 操作符。
+
+这些库中的函数对象的一个重要方面就是库保证它们可以工作于指针上。回想以下比较两个不相关的指针是未定义（undefined）的。然而，我们也许想基于在内存中的地址对一个指针 vector 进行 sort，标准库函数对象就可以做到：
+
+````cpp
+vector<string *> nameTable;
+//错误：nameTable 中的指针是不相关的，所以 < 是未定义的
+sort(nameTable.begin(), nameTable.end(),
+  [](string *a, string *b) { return a < b; });
+//ok：库保证 less 在指针类型上工作良好
+sort(nameTable.begin(), nameTable.end(), less<string*>());
+````
+值得说明的是关联容器使用 `less<key_type>` 来排序元素。因而，我们可以定义指针的 set 或者使用指针作为 map 中的键而不用直接指定 less 对象。
+
 ### 14.8.3 可调用对象和 std::function
+
+C++ 有多种可调用对象：函数和函数指针，lambdas，由 bind 创建的对象，重载函数调用操作符的类。
+
+与任何别的对象一样，可调用对象是有类型的。如，每个 lambda 有一个自己的唯一的匿名类类型。函数和函数指针类型根据它们的返回值类型和参数类型的不同而有所不同，等等。
+
+然而，两个不同类型的可调用对象也许会有相同的调用签名（call signature）。这个调用签名说明了调用此对象时返回的类型以及必须传递的参数类型。下面是函数类型的调用签名：`int(int, int)` 表示一个以两个 int 为参数返回一个 int 的函数类型。
 
 **不同的类型可以有相同的调用签名**
 
-**标准库函数类型**
+有时我们希望将有着同一个调用前面的几个可调用对象看做是同一个类型。如考察下面的不同类型的可调用对象：
 
-**重载的 Functions 和函数**
+````cpp
+//函数
+int add(int i, int j) { return i + j; }
+//lambda
+auto mod = [](int i, int j) { return i % j; };
+//函数对象类
+struct div {
+  int operator()(int denominator, int divisor) {
+    return denominator / divisor;
+  }
+};
+````
+尽管它们的类型不一样，它们的调用签名是一样的：`int(int, int)`。我们也许想用这些可调用对象来创建一个简单的计算器。为了达到目的，我们需要定义一个函数表（function table）来存储这些可调用对象的“指针”。如果我们将函数表定义为如下：
+
+````cpp
+map<string, int(*)(int, int)> binops;
+````
+
+我们可以将 add 以 `binops.insert({"+", add});` 添加进去，但是我们不能添加 `mod` ，因为 mod 是 lambda，然而每个 lambda 都有自己的类类型。这与 binops 中的值的类型是不一致。
+
+**标准库 std::function 类型**
+
+我们通过一个定义在 functional 头文件中的新的标准库类 `std::function` 来解决此问题；下表列举了定义在 function 中的操作：
+
+- `function<T> f;` f 是一个空的 function 对象，其可以存储 T 所表示的调用签名的可调用对象（T 是形如 `retType(args)` 的格式）；
+- `function<T> f(nullptr);` 显式构建一个空的 function；
+- `function<T> f(obj);` 存储可调用对象 obj 的一份拷贝到 f 中；
+- `f` 将 f 作为条件使用；如果 f 中持有一个可调用对象返回 true，否则返回 false；
+- `f(args)` 传递 args 去调用 f 中的对象；
+
+**定义为`function<T>`的成员类型**
+
+- `result_type` 这个 function 类型的可调用对象的返回值类型；
+- `argument_type` `first_argument_type` `second_argument_type` 当 T 只有一个或两个参数时的参数类型。如果 T 只有一个参数，`argument_type` 就是那个类型。如果 T 有两个参数，`first_argument_type` 和 `second_argument_type` 分别是哪些参数类型。
+
+function 是模板。与其它模板一样，当我们创建 function 类型对象时我们必须提供额外的信息，在这里是调用签名，如：
+
+````cpp
+function<int(int, int)>
+````
+
+我们可以用上面的 function 类型来表示可调用对象：接收两个 int 参数并返回一个 int 结果。如：
+
+````cpp
+function<int(int, int)> f1 = add;
+function<int(int, int)> f2 = div();
+function<int(int, int)> f3 = [](int i, int j) { return i*j};
+cout << f1(4, 2) << endl;
+cout << f2(4, 2) << endl;
+cout << f3(4, 2) << endl;
+````
+
+我们可以按照这个方式重新定义我们的 map：
+
+````cpp
+map<string, function<int(int, int)>> binops = {
+  {"+", add}, //函数指针
+  {"-", std::minus<int>()}, //库函数对象
+  {"/", div()}, //用户定义函数对象
+  {"*", [](int i, int j) { return i * j; }}, //匿名 lambda
+  {"%", mod} //具名 lambda
+};
+````
+我们的 map 有五个元素，尽管其底层类型都不一样，我们可以将其存储到同一个调用签名的 function 类型下。
+
+**重载的函数和 function**
+
+我们不能直接将一个重载的函数的名字存储到 function 类型的对象中：
+
+````cpp
+int add(int i, int j) { return i + j; }
+Sales_data add(const Sales_data &, const Sales_data &);
+map<string, function<int(int, int)>> binops;
+binops.insert({"+", add}); //错误：哪一个 add？
+````
+一种解决这种二义性的方式是存储函数指针而不是函数的名字：
+````cpp
+int(*fp)(int, int) = add;
+binops.insert({"+", fp});
+````
+或者使用 lambda 包装一下：
+````cpp
+binops.insert({"+", [](int a, int b){return add(a, b);}});
+````
+
+**注意**：新标准库中 function 类与之前版本中的 `unary_function` 和 `binary_function` 是不相关的。这些类已经被更加通用的 `bind` 函数给取代了。
 
 ## 14.9 重载、转换和操作符
 

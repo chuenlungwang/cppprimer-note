@@ -299,7 +299,7 @@ cout << f() << endl;
     return a.size() < b.size();
 }
 ````
-空的捕获列表表示不适用任何外围函数的本地变量。lambda 的参数与常规函数的参数一样是 `const string` 的引用。我们可以重写 `stable_sort` 的调用从而使用 lambda：
+空的捕获列表表示不使用任何外围函数的本地变量。lambda 的参数与常规函数的参数一样是 `const string` 的引用。我们可以重写 `stable_sort` 的调用从而使用 lambda：
 ````cpp
 stable_sort(words.begin(), words.end(),
     [](const string &a, const string &b) {
