@@ -710,7 +710,7 @@ extern "C" void print(int);
 class SmallInt {};
 class BigNum {};
 extern "C" double calc(double);
-exter SmallInt calc(const SmallInt&);
+extern SmallInt calc(const SmallInt&);
 extern BigNum calc(const BigNum&);
 ````
 C 版本的 calc 可以在 C 和 C++ 中调用，而其它的函数只能在 C++ 中调用，声明的顺序是不重要的。
