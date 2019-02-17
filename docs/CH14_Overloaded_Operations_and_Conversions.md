@@ -655,13 +655,13 @@ binops.insert({"+", [](int a, int b){return add(a, b);}});
 
 **定义一个具有转换操作符的类**
 
-如下代码：(code/conversion_operator.cc)[../code/conversion_operator.cc]，其中构造函数将算术类型转为 SmallInt，转换操作符将 SmallInt 转为 int：
+如下代码：[code/conversion_operator.cc](../code/conversion_operator.cc)，其中构造函数将算术类型转为 SmallInt，转换操作符将 SmallInt 转为 int：
 ````cpp
 SmallInt si;
 si = 4; //隐式将 4 转为 SmallInt，然后调用 SmallInt::operator=
 si + 3; //隐式将 si 转为 int，然后执行整数加法
 ````
-尽管编译器一次只会执行一个用户定义的转换 (§4.11.2)[./CH04_Expressions.md#4112-其它隐式转换]，隐式用户定义的转换在内置标准转换之前或之后发生。因而，我们可以传递任何算术类型给 SmallInt 的构造函数。通常，我们可以使用转换操作符将 SmallInt 转为 int 然后将结果 int 值转为别的算术类型：
+尽管编译器一次只会执行一个用户定义的转换 [§4.11.2](./CH04_Expressions.md#4112-其它隐式转换)，隐式用户定义的转换在内置标准转换之前或之后发生。因而，我们可以传递任何算术类型给 SmallInt 的构造函数。通常，我们可以使用转换操作符将 SmallInt 转为 int 然后将结果 int 值转为别的算术类型：
 ````cpp
 SmallInt si = 3.14;
 si + 3.14;
