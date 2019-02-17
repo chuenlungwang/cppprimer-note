@@ -29,6 +29,10 @@ EXECUTABLES := noexcept array constexpr_class namespace_class \
 	rvalue_reference \
 	explict_cast \
 	new_align \
+	tuple \
+	bitset \
+	regex \
+	random \
 
 OBJS := ShowBackStageCls
 
