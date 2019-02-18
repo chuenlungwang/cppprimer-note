@@ -28,7 +28,7 @@ readDirectory(const std::string &pathname)
     struct dirent *dirp;
     struct stat statbuf;
     //the additional byte for `/`slash
-    int basePathlen = pathname.size() + 1;
+    size_t basePathlen = pathname.size() + 1;
     //the additional byte for null-terminal
     size_t pathlen = basePathlen + 1;
     char *fullpath = static_cast<char*>(malloc(pathlen));
@@ -39,7 +39,7 @@ readDirectory(const std::string &pathname)
         if (strcmp(dirp->d_name, ".") == 0 ||
             strcmp(dirp->d_name, "..") == 0)
             continue;
-        int currentPathlen = basePathlen + 1 + strlen(dirp->d_name);
+        size_t currentPathlen = basePathlen + 1 + strlen(dirp->d_name);
         if (pathlen < currentPathlen) {
             size_t newPathlen = currentPathlen * 2;
             char *newFullpath = static_cast<char*>(realloc(fullpath, newPathlen));

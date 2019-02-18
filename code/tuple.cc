@@ -73,13 +73,13 @@ void reportResults(const std::string &s,
 int main()
 {
     int i=1;
-    std::tuple<size_t, double, long> threeD = {i,2,3};
+    std::tuple<size_t, double, long> threeD{i,2,3};
     std::cout << std::get<0>(threeD) << std::endl;
     std::cout << std::get<1>(threeD) << std::endl;
     std::cout << std::get<2>(threeD) << std::endl;
 
     typedef std::tuple<std::string, std::vector<double>, int, std::list<int>> customTuple;
-    customTuple someVal = {"constants", {3.14, 2.718}, 42, {0,1,2,3,4,5}};
+    customTuple someVal{"constants", {3.14, 2.718}, 42, {0,1,2,3,4,5}};
 
     std::tuple_element<0, customTuple>::type str = "customTuple";
     std::cout << std::tuple_size<customTuple>::value << std::endl;
@@ -107,8 +107,8 @@ int main()
     std::tuple<size_t, size_t> twoD(1, 2);
     //bool b = (duo == twoD); //错误：不能将 size_t 和 string 进行比较
     std::tuple<size_t, size_t, size_t> threeD2(1,2,3);
-    bool b = (twoD < threeD2); //可以编译但行为不对
-    std::cout << "b is: " << b << std::endl;
+    //bool b = (twoD < threeD2); //可以编译但行为不对
+    //std::cout << "b is: " << b << std::endl;
 
     std::tuple<size_t, size_t> origin(0, 0);
     bool b1 = (origin < twoD);

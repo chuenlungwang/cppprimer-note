@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstddef>
 #include <vector>
+#include <cmath>
 
 void
 default_random_engine()
@@ -60,6 +61,55 @@ random_set_seed()
     }
 }
 
+void test_real_random()
+{
+    std::default_random_engine e;
+    std::uniform_real_distribution<double> u(0, 1);
+    for (size_t i=0; i<10; ++i)
+        std::cout << u(e) << " ";
+    std::cout << std::endl;
+}
+
+void test_normal_distribution()
+{
+    std::default_random_engine e;
+    std::normal_distribution<> n(4, 1.5);
+    std::vector<unsigned> values(9);
+    for (size_t i=0; i != 200; ++i) {
+        unsigned v = lround(n(e));
+        if (v < values.size())
+            ++values[v];
+    }
+    for (size_t j=0; j!=values.size(); ++j)
+        std::cout << j << ": " << std::string(values[j], '*') << std::endl;
+}
+
+bool play(bool first) {
+    if (first) {
+        return first;
+    }
+}
+
+void test_bernoulli_distribution()
+{
+    static std::default_random_engine e;
+    static std::bernoulli_distribution b;
+    for (int i=0; i!=20; i++) {
+        bool first = b(e);
+        std::cout << (first ? "We go first"
+                            : "You get to go first")
+                  << std::endl;
+        std::cout << ((play(first)) ? "sorry, you lost"
+                                    : "congrats, you won")
+                  << std::endl;
+    }
+
+    for (int i=0; i<99; i++) {
+        std::bernoulli_distribution c(0.55);
+        std::cout << c(e) << std::endl;
+    }
+}
+
 int
 main()
 {
@@ -75,6 +125,10 @@ main()
     std::cout << ((v3 == v4) ? "equal" : "not equal") << std::endl;
 
     random_set_seed();
+    test_real_random();
+    std::uniform_real_distribution<> u(0, 1);
+    test_normal_distribution();
+    test_bernoulli_distribution();
 
     return 0;
 }

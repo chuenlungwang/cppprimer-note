@@ -33,6 +33,7 @@ EXECUTABLES := noexcept array constexpr_class namespace_class \
 	bitset \
 	regex \
 	random \
+	io_revisit \
 
 OBJS := ShowBackStageCls
 
