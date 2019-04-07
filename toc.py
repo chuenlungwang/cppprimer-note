@@ -35,7 +35,7 @@ def parsefile(f):
 
 def tomarkdown(fstruct):
     str_lst = []
-    pattern = re.compile(ur"[.:()`\"']")
+    pattern = re.compile(ur"""[!\"#$%&'()*+,./:;<=>?@[\]^`{|}~]""")
     str_lst.append("\n[{}]({})".format(fstruct['file'], fstruct['file']))
     for h in fstruct['heads']:
         hstr = h[1]
