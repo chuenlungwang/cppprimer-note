@@ -44,7 +44,7 @@ def tomarkdown(fstruct):
         hstr = hstr.replace('）', '')
         hstr = hstr.replace('：', '')
         hstr = hstr.replace(' ', '-')
-        str_lst.append("{}- [{}]({}#{})".format(" "*h[0], h[1], fstruct['file'], hstr))
+        str_lst.append("{}- [{}]({}#{})".format(" "*(h[0]-1)*2, h[1], fstruct['file'], hstr))
     return '\n'.join(str_lst)
 
 if __name__ == "__main__":
