@@ -1,10 +1,13 @@
+# 目录（Table of Content）
 
-[docs/CH00_Preface.md](docs/CH00_Preface.md)
+<!-- TOC START -->
+
+## [docs/CH00_Preface.md](docs/CH00_Preface.md)
 - [开始](docs/CH00_Preface.md#开始)
 - [前言](docs/CH00_Preface.md#前言)
 - [为什么是这一本？](docs/CH00_Preface.md#为什么是这一本？)
 
-[docs/CH01_Getting_Started.md](docs/CH01_Getting_Started.md)
+## [docs/CH01_Getting_Started.md](docs/CH01_Getting_Started.md)
   - [最简单的 C++ 程序](docs/CH01_Getting_Started.md#最简单的-C-程序)
       - [关键概念：类型](docs/CH01_Getting_Started.md#关键概念类型)
       - [输入输出](docs/CH01_Getting_Started.md#输入输出)
@@ -16,7 +19,7 @@
     - [关键概念：类定义行为](docs/CH01_Getting_Started.md#关键概念类定义行为)
     - [关键术语](docs/CH01_Getting_Started.md#关键术语)
 
-[docs/CH02_Variables_and_Basic_Types.md](docs/CH02_Variables_and_Basic_Types.md)
+## [docs/CH02_Variables_and_Basic_Types.md](docs/CH02_Variables_and_Basic_Types.md)
   - [C++ 最基本特性](docs/CH02_Variables_and_Basic_Types.md#C-最基本特性)
   - [内置类型](docs/CH02_Variables_and_Basic_Types.md#内置类型)
   - [2.1 内置类型](docs/CH02_Variables_and_Basic_Types.md#21-内置类型)
@@ -71,7 +74,7 @@
   - [2.6 自定义数据结构](docs/CH02_Variables_and_Basic_Types.md#26-自定义数据结构)
   - [术语](docs/CH02_Variables_and_Basic_Types.md#术语)
 
-[docs/CH03_Strings_Vectors_and_Arrays.md](docs/CH03_Strings_Vectors_and_Arrays.md)
+## [docs/CH03_Strings_Vectors_and_Arrays.md](docs/CH03_Strings_Vectors_and_Arrays.md)
   - [3.1 名称空间的 using 声明](docs/CH03_Strings_Vectors_and_Arrays.md#31-名称空间的-using-声明)
   - [3.2 string 类型](docs/CH03_Strings_Vectors_and_Arrays.md#32-string-类型)
     - [3.2.2 string 可执行的操作](docs/CH03_Strings_Vectors_and_Arrays.md#322-string-可执行的操作)
@@ -100,7 +103,7 @@
     - [多维数组的下标引用](docs/CH03_Strings_Vectors_and_Arrays.md#多维数组的下标引用)
   - [关键术语](docs/CH03_Strings_Vectors_and_Arrays.md#关键术语)
 
-[docs/CH04_Expressions.md](docs/CH04_Expressions.md)
+## [docs/CH04_Expressions.md](docs/CH04_Expressions.md)
   - [4.1 fundamentals](docs/CH04_Expressions.md#41-fundamentals)
     - [4.1.1 基础概念](docs/CH04_Expressions.md#411-基础概念)
     - [4.1.2 优先级和结合性](docs/CH04_Expressions.md#412-优先级和结合性)
@@ -127,7 +130,7 @@
       - [C 风格强转](docs/CH04_Expressions.md#C-风格强转)
   - [4.12 操作符优先级](docs/CH04_Expressions.md#412-操作符优先级)
 
-[docs/CH05_Statements.md](docs/CH05_Statements.md)
+## [docs/CH05_Statements.md](docs/CH05_Statements.md)
 - [if 语句](docs/CH05_Statements.md#if-语句)
 - [switch 语句](docs/CH05_Statements.md#switch-语句)
 - [while 语句](docs/CH05_Statements.md#while-语句)
@@ -138,7 +141,7 @@
   - [警告：C++ 中很难达到异常安全](docs/CH05_Statements.md#警告C-中很难达到异常安全)
   - [标准异常](docs/CH05_Statements.md#标准异常)
 
-[docs/CH06_Functions.md](docs/CH06_Functions.md)
+## [docs/CH06_Functions.md](docs/CH06_Functions.md)
   - [6.1 函数基础](docs/CH06_Functions.md#61-函数基础)
     - [6.1.1 形参和实参](docs/CH06_Functions.md#611-形参和实参)
     - [6.1.2 返回类型](docs/CH06_Functions.md#612-返回类型)
@@ -167,7 +170,7 @@
   - [6.7 函数指针](docs/CH06_Functions.md#67-函数指针)
   - [关键术语](docs/CH06_Functions.md#关键术语)
 
-[docs/CH07_Classes.md](docs/CH07_Classes.md)
+## [docs/CH07_Classes.md](docs/CH07_Classes.md)
   - [7.1 定义抽象数据类型](docs/CH07_Classes.md#71-定义抽象数据类型)
     - [7.1.1 设计类](docs/CH07_Classes.md#711-设计类)
     - [7.1.2 定义类](docs/CH07_Classes.md#712-定义类)
@@ -193,7 +196,7 @@
   - [7.6 static 成员](docs/CH07_Classes.md#76-static-成员)
   - [关键概念](docs/CH07_Classes.md#关键概念)
 
-[docs/CH08_The_IO_Library.md](docs/CH08_The_IO_Library.md)
+## [docs/CH08_The_IO_Library.md](docs/CH08_The_IO_Library.md)
   - [8.1 IO 类](docs/CH08_The_IO_Library.md#81-IO-类)
     - [8.1.1 不能拷贝或赋值 IO 对象](docs/CH08_The_IO_Library.md#811-不能拷贝或赋值-IO-对象)
     - [8.1.2 条件状态](docs/CH08_The_IO_Library.md#812-条件状态)
@@ -206,7 +209,7 @@
     - [8.3.2 使用 ostringstream 对象](docs/CH08_The_IO_Library.md#832-使用-ostringstream-对象)
   - [关键概念](docs/CH08_The_IO_Library.md#关键概念)
 
-[docs/CH09_Sequential_Containers.md](docs/CH09_Sequential_Containers.md)
+## [docs/CH09_Sequential_Containers.md](docs/CH09_Sequential_Containers.md)
   - [9.1 顺序容器概述](docs/CH09_Sequential_Containers.md#91-顺序容器概述)
   - [9.2 容器库概述](docs/CH09_Sequential_Containers.md#92-容器库概述)
     - [9.2.1 迭代器](docs/CH09_Sequential_Containers.md#921-迭代器)
@@ -233,7 +236,7 @@
   - [9.6 容器适配器](docs/CH09_Sequential_Containers.md#96-容器适配器)
   - [关键术语](docs/CH09_Sequential_Containers.md#关键术语)
 
-[docs/CH10_Generic_Algorithms.md](docs/CH10_Generic_Algorithms.md)
+## [docs/CH10_Generic_Algorithms.md](docs/CH10_Generic_Algorithms.md)
   - [10.1 概述](docs/CH10_Generic_Algorithms.md#101-概述)
   - [10.2 算法入门](docs/CH10_Generic_Algorithms.md#102-算法入门)
     - [10.2.1 只读算法](docs/CH10_Generic_Algorithms.md#1021-只读算法)
@@ -254,7 +257,7 @@
     - [10.5.3 算法名字的约定](docs/CH10_Generic_Algorithms.md#1053-算法名字的约定)
   - [10.6 特定于容器的算法](docs/CH10_Generic_Algorithms.md#106-特定于容器的算法)
 
-[docs/CH11_Associative_Containers.md](docs/CH11_Associative_Containers.md)
+## [docs/CH11_Associative_Containers.md](docs/CH11_Associative_Containers.md)
   - [11.1 使用关联容器](docs/CH11_Associative_Containers.md#111-使用关联容器)
   - [11.2 关联容器简介](docs/CH11_Associative_Containers.md#112-关联容器简介)
     - [11.2.1 定义关联容器](docs/CH11_Associative_Containers.md#1121-定义关联容器)
@@ -268,7 +271,7 @@
     - [11.3.5 访问元素](docs/CH11_Associative_Containers.md#1135-访问元素)
   - [11.4 无序容器](docs/CH11_Associative_Containers.md#114-无序容器)
 
-[docs/CH12_Dynamic_Memory.md](docs/CH12_Dynamic_Memory.md)
+## [docs/CH12_Dynamic_Memory.md](docs/CH12_Dynamic_Memory.md)
   - [12.1 动态内存和智能指针](docs/CH12_Dynamic_Memory.md#121-动态内存和智能指针)
     - [12.1.1 `shared_ptr` 类](docs/CH12_Dynamic_Memory.md#1211-shared_ptr-类)
     - [12.1.2 直接管理内存](docs/CH12_Dynamic_Memory.md#1212-直接管理内存)
@@ -281,7 +284,7 @@
     - [12.2.2 allocator 类](docs/CH12_Dynamic_Memory.md#1222-allocator-类)
   - [关键术语](docs/CH12_Dynamic_Memory.md#关键术语)
 
-[docs/CH13_Copy_Control.md](docs/CH13_Copy_Control.md)
+## [docs/CH13_Copy_Control.md](docs/CH13_Copy_Control.md)
   - [13.1 拷贝、赋值和销毁](docs/CH13_Copy_Control.md#131-拷贝、赋值和销毁)
     - [13.1.1 拷贝构造函数](docs/CH13_Copy_Control.md#1311-拷贝构造函数)
     - [13.1.2 拷贝-赋值操作符](docs/CH13_Copy_Control.md#1312-拷贝-赋值操作符)
@@ -301,7 +304,7 @@
     - [13.6.3 右值引用和成员函数](docs/CH13_Copy_Control.md#1363-右值引用和成员函数)
   - [关键术语](docs/CH13_Copy_Control.md#关键术语)
 
-[docs/CH14_Overloaded_Operations_and_Conversions.md](docs/CH14_Overloaded_Operations_and_Conversions.md)
+## [docs/CH14_Overloaded_Operations_and_Conversions.md](docs/CH14_Overloaded_Operations_and_Conversions.md)
   - [14.1 基本概念](docs/CH14_Overloaded_Operations_and_Conversions.md#141-基本概念)
   - [14.2 输入输出操作符](docs/CH14_Overloaded_Operations_and_Conversions.md#142-输入输出操作符)
     - [14.2.1 重载输出操作符 `<<`](docs/CH14_Overloaded_Operations_and_Conversions.md#1421-重载输出操作符-)
@@ -322,7 +325,7 @@
     - [14.9.2 避免转换二义性](docs/CH14_Overloaded_Operations_and_Conversions.md#1492-避免转换二义性)
     - [14.9.3 函数匹配和重载操作符](docs/CH14_Overloaded_Operations_and_Conversions.md#1493-函数匹配和重载操作符)
 
-[docs/CH15_Object-Oriented_Programming.md](docs/CH15_Object-Oriented_Programming.md)
+## [docs/CH15_Object-Oriented_Programming.md](docs/CH15_Object-Oriented_Programming.md)
   - [15.1 面向对象：介绍](docs/CH15_Object-Oriented_Programming.md#151-面向对象介绍)
   - [15.2 定义基类和子类](docs/CH15_Object-Oriented_Programming.md#152-定义基类和子类)
     - [15.2.1 定义基类](docs/CH15_Object-Oriented_Programming.md#1521-定义基类)
@@ -340,7 +343,7 @@
   - [15.8 容器和继承](docs/CH15_Object-Oriented_Programming.md#158-容器和继承)
   - [关键术语](docs/CH15_Object-Oriented_Programming.md#关键术语)
 
-[docs/CH16_Templates_and_Generic_Programming.md](docs/CH16_Templates_and_Generic_Programming.md)
+## [docs/CH16_Templates_and_Generic_Programming.md](docs/CH16_Templates_and_Generic_Programming.md)
   - [16.1 定义模板](docs/CH16_Templates_and_Generic_Programming.md#161-定义模板)
     - [16.1.1 函数模板](docs/CH16_Templates_and_Generic_Programming.md#1611-函数模板)
     - [16.1.2 类模板](docs/CH16_Templates_and_Generic_Programming.md#1612-类模板)
@@ -364,7 +367,7 @@
   - [16.5 模板特例（Template Sepcializations）](docs/CH16_Templates_and_Generic_Programming.md#165-模板特例Template-Sepcializations)
   - [关键术语](docs/CH16_Templates_and_Generic_Programming.md#关键术语)
 
-[docs/CH17_Specialized_Library_Facilities.md](docs/CH17_Specialized_Library_Facilities.md)
+## [docs/CH17_Specialized_Library_Facilities.md](docs/CH17_Specialized_Library_Facilities.md)
   - [17.1 tuple 类型](docs/CH17_Specialized_Library_Facilities.md#171-tuple-类型)
     - [17.1.1 定义和初始化 tuple](docs/CH17_Specialized_Library_Facilities.md#1711-定义和初始化-tuple)
     - [17.1.2 使用 tuple 以返回多个值](docs/CH17_Specialized_Library_Facilities.md#1712-使用-tuple-以返回多个值)
@@ -384,7 +387,7 @@
     - [17.5.2 未格式化的输入、输出操作](docs/CH17_Specialized_Library_Facilities.md#1752-未格式化的输入、输出操作)
     - [17.5.3 随机访问流](docs/CH17_Specialized_Library_Facilities.md#1753-随机访问流)
 
-[docs/CH18_Tools_for_Large_Programs.md](docs/CH18_Tools_for_Large_Programs.md)
+## [docs/CH18_Tools_for_Large_Programs.md](docs/CH18_Tools_for_Large_Programs.md)
   - [18.1 异常处理](docs/CH18_Tools_for_Large_Programs.md#181-异常处理)
     - [18.1.1 抛出异常](docs/CH18_Tools_for_Large_Programs.md#1811-抛出异常)
     - [18.1.2 捕捉异常](docs/CH18_Tools_for_Large_Programs.md#1812-捕捉异常)
@@ -404,7 +407,7 @@
     - [18.3.5 构造函数和虚继承](docs/CH18_Tools_for_Large_Programs.md#1835-构造函数和虚继承)
   - [关键术语](docs/CH18_Tools_for_Large_Programs.md#关键术语)
 
-[docs/CH19_Specialized_Tools_and_Techniques.md](docs/CH19_Specialized_Tools_and_Techniques.md)
+## [docs/CH19_Specialized_Tools_and_Techniques.md](docs/CH19_Specialized_Tools_and_Techniques.md)
   - [19.1 控制内存分配](docs/CH19_Specialized_Tools_and_Techniques.md#191-控制内存分配)
     - [19.1.1 重载 new 和 delete](docs/CH19_Specialized_Tools_and_Techniques.md#1911-重载-new-和-delete)
     - [19.1.2 定位（placement）new 表达式](docs/CH19_Specialized_Tools_and_Techniques.md#1912-定位placementnew-表达式)
@@ -425,3 +428,5 @@
     - [19.8.1 位域（bit-fields）](docs/CH19_Specialized_Tools_and_Techniques.md#1981-位域bit-fields)
     - [19.8.2 volatile 限定符](docs/CH19_Specialized_Tools_and_Techniques.md#1982-volatile-限定符)
     - [19.8.3 链接指令：`extern "C"`](docs/CH19_Specialized_Tools_and_Techniques.md#1983-链接指令extern-C)
+
+<!-- TOC END -->
