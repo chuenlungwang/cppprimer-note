@@ -36,7 +36,7 @@ def parsefile(f):
 def tomarkdown(fstruct):
     str_lst = []
     pattern = re.compile(ur"""[!\"#$%&'()*+,./:;<=>?@[\]^`{|}~]""")
-    str_lst.append("\n[{}]({})".format(fstruct['file'], fstruct['file']))
+    str_lst.append("\n## [{}]({})".format(fstruct['file'], fstruct['file']))
     for h in fstruct['heads']:
         hstr = h[1]
         hstr = pattern.sub('', hstr)
@@ -47,7 +47,28 @@ def tomarkdown(fstruct):
         str_lst.append("{}- [{}]({}#{})".format(" "*(h[0]-1)*2, h[1], fstruct['file'], hstr))
     return '\n'.join(str_lst)
 
+def writetoc(toc, readmef):
+    content = []
+    intoc = False
+    f = open(readmef, 'rw+')
+    for l in f:
+        if not intoc:
+            content.append(l)
+        if l.strip() == "<!-- TOC START -->":
+            content.append(toc)
+            content.append('\n\n')
+            intoc = True
+        if l.strip() == "<!-- TOC END -->":
+            intoc = False
+            content.append(l)
+    f.seek(0, os.SEEK_SET)
+    f.truncate()
+    f.write("".join(content))
+    f.close()
+
 if __name__ == "__main__":
+    toc = []
     for f in listfiles("docs"):
         fstruct = parsefile(f)
-        print(tomarkdown(fstruct))
+        toc.append(tomarkdown(fstruct))
+    writetoc("\n".join(toc), "./README.md")
