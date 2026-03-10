@@ -40,7 +40,7 @@ deque 是一个更为复杂的数据结构。与 string 和 vector 一样，dequ
 
 有一些选择使用哪个容器的首要原则：
 
-- 除非了更好的理由，优先使用 vector；
+- 除非有更好的理由，优先使用 vector；
 - 如果程序有许多小的元素并且对空间消耗很敏感，不要使用 list 和 `forward_list`；
 - 需要随机访问，使用 vector 或 deque；
 - 需要在容器中间部分进行快速插入和删除，使用 list 或 `forward_list`；
@@ -51,7 +51,7 @@ deque 是一个更为复杂的数据结构。与 string 和 vector 一样，dequ
 
 如果同时需要随机访问和在中间部分插入或删除元素？此时需要看占主要的操作是什么（更多的是插入或删除，还是更多的是访问），来决定使用哪种类型的容器。在这种情况下，使用多种容器进行性能测试是必不可少的。
 
-最佳实践：如果你不知道该选择哪种容器，那就进使用 vector 和 list 共同的接口：迭代器而不是下标，避免随机访问元素。这样就可以在需要时很容易的替换。
+最佳实践：如果你不知道该选择哪种容器，那就就使用 vector 和 list 共同的接口：迭代器而不是下标，避免随机访问元素。这样就可以在需要时很容易的替换。
 
 ## 9.2 容器库概述
 
@@ -64,7 +64,7 @@ deque 是一个更为复杂的数据结构。与 string 和 vector 一样，dequ
 以下是所有容器共同的操作：
 
 **类型别名**
-- iterator ：每个容器类型自己的迭代器类型；
+- `iterator` ：每个容器类型自己的迭代器类型；
 - `const_iterator` ：可以读取但不能修改元素的迭代器类型；
 - `size_type` ：容器类型足够容纳最大的容器的尺寸的无符号整形值类型；
 - `difference_type` ：两个迭代器之间的距离的有符号整形类型；
@@ -73,7 +73,7 @@ deque 是一个更为复杂的数据结构。与 string 和 vector 一样，dequ
 - `const_reference` 元素的 const 左值类型；
 
 **赋值和 swap**
-- `c1 = 2` 将 c1 中的元素替换为 c2 中的元素；
+- `c1 = c2` 将 c1 中的元素替换为 c2 中的元素；
 - `c1 = {a,b,c...}` 将 c1 中的元素替换为列表中的值（不适用于 array）；
 - `a.swap(b)` 将 a、b 中的值进行交换；
 - `swap(a, b)` 等于交换 `a.swap(b)`；
@@ -141,7 +141,7 @@ vector<noDefault> v2(10); // 错误：必须提供元素的初始值
 
 名字 last 带有一点误导的作用，第二个迭代器并不是指向最后一个元素，而是指向最后一个元素的下一个位置。元素范围包括 first 和一直到 last 之前的所有元素。这种元素范围成为左包含区间（left-inclusive interval），用数学表示就是 `[begin, end)` ，表示范围从 begin 开始，以 end 结束但是不包括 end。迭代器 begin 和 end 必须指向同一个容器。
 
-end 一定不能指向 begin 之前的元素，只有这样才能通过自增 begin 迭代器而到达 end ，否则，所表示的范围就会无效。编译器并不能强制要求这种需求，只能有程序自己去保证这种约定。
+end 一定不能指向 begin 之前的元素，只有这样才能通过自增 begin 迭代器而到达 end ，否则，所表示的范围就会无效。编译器并不能强制要求这种需求，只能由程序自己去保证这种约定。
 
 **左包含范围的编程隐喻**
 
@@ -161,9 +161,9 @@ while (begin != end) {
 
 ### 9.2.2 容器类型的成员
 
-每个容器都定义了几个类型。如：`size_type` ，iterator 和 `const_iterator` 。绝大多数的容器还提供反向迭代器，反向迭代器的 `++` 将使得迭代器指向前一个元素，从而达到反向遍历容器元素的目的。
+每个容器都定义了几个类型。如：`size_type` ，`iterator` 和 `const_iterator` 。绝大多数的容器还提供反向迭代器，反向迭代器的 `++` 将使得迭代器指向前一个元素，从而达到反向遍历容器元素的目的。
 
-剩下的类型别名使得我们使用容器的元素类型时不需要真正知道其类型是什么。如果我们需要元素类型，我们只要使用 `value_type` 就可以，如果需要值的引用类型，就使用 reference 或者 `const_reference` 就可以。这些元素相关的类型别名在泛型编程中十分有用处。
+剩下的类型别名使得我们使用容器的元素类型时不需要真正知道其类型是什么。如果我们需要元素类型，我们只要使用 `value_type` 就可以，如果需要值的引用类型，就使用 `reference` 或者 `const_reference` 就可以。这些元素相关的类型别名在泛型编程中十分有用处。
 
 使用这些类型需要用容器的类型加以限定，如：
 ````cpp
@@ -273,14 +273,14 @@ array<int, 10> copy = digits;
 
 ### 9.2.5 赋值和 swap
 
-赋值相关的操作符作用域整个容器。其将左边容器的全部元素替换为右边容器中的元素的副本。如：
+赋值相关的操作符作用于整个容器。其将左边容器的全部元素替换为右边容器中的元素的副本。如：
 ````cpp
 c1 = c2; // 将 c1 的内容替换为 c2 中的元素的副本
 c1 = {a,b,c}; // 将 c1 的内容替换为初始化列表中的元素的副本
 ````
-当执行完赋值后，左右边的容器的内容就完全一样了。
+当执行完赋值后，左右两边的容器的内容就完全一样了。
 
-与内置数组不一样，标准库 array 类型支持赋值。左右边的操作数必须是相同的类型：
+与内置数组不一样，标准库 array 类型支持赋值。左右两边的操作数必须是相同的类型：
 ````cpp
 array<int, 10> a1 = {0,1,2,3,4,5,6,7,8,9};
 array<int, 10> a2 = {0};
@@ -338,13 +338,13 @@ array 的 swap 有特别之处，它会交换所有元素值。所以交换两�
 
 array 在 swap 之后，其迭代器、指针和引用都指向原来指向的元素不变。当然，其元素值已经被替换为了另外一个 array 中对应位置的元素值。
 
-在新标准中，同时提供了一个成员版本和非成员版本的 swap。早期版本只提供了成员版本的 swap，非成员版本对于泛型编程来说很重要。所以，最好是使用费成员版本的 swap。
+在新标准中，同时提供了一个成员版本和非成员版本的 swap。早期版本只提供了成员版本的 swap，非成员版本对于泛型编程来说很重要。所以，最好是使用非成员版本的 swap。
 
 ### 9.2.6 容器 size 操作
 
 除了 `forward_list` ，所有容器类型都提供 size 成员返回容器中元素的数目；除此之外，所有容器类型还都提供 empty 返回 bool 表示容器是否为空；`max_size` 返回此容器类型能够容纳的元素数目的限制；
 
-`forwad_list` 只提供了 `max_size` 和 empty 操作。
+`forwad_list` 只提供了 `max_size` 和 `empty` 操作。
 
 ### 9.2.7 关系操作符
 
@@ -352,7 +352,7 @@ array 在 swap 之后，其迭代器、指针和引用都指向原来指向的�
 
 比较两个容器执行的是两两之间的比较，这与 string 的关系操作是一样的：
 
-- 如果两个容器具有相同的大小，并且所有元素都是一样的，那么这两个容器就是相等的；否则他们就是不相等的‘
+- 如果两个容器具有相同的大小，并且所有元素都是一样的，那么这两个容器就是相等的；否则他们就是不相等的；
 - 如果两个容器的大小不一样，但是短一点的容器中的每个元素都与对应位置的长的容器中的元素值相等，那么短的就比长的小；
 - 如果没有一个容器是另一个的头部子序列，那么比较取决于第一个不相等的元素；
 
@@ -368,7 +368,7 @@ v1 == v4; // true
 v1 == v2; // false
 ````
 
-注意：只有元素类型同样定义了关系操作符，我们才能使用容器的关系操作符进行比较。
+注意：只有当其元素类型也定义了相应的比较运算符时，我们才能使用容器的关系操作符进行比较。
 
 **关系操作符使用元素的关系操作符**
 
@@ -388,7 +388,7 @@ if (storeA < storeB) // 错误：Sales_data 没有小于操作符
 
 除了 array 之外的容器都提供了灵活的内存管理机制。可以动态的添加或移除容器中的元素从而在运行时改变容器的大小。以下是给顺序容器添加元素的操作：
 
-以下的操作都会改变容器的大小；array 不支持这些操作。`forward_list` 有自己的 insert 和 emplace 的版本；`forward_list` 并不支持 `push_back` 和 `emplace_back`。string 和 vector 不支持 `push_front` 和 `emplace_front`；
+以下的操作都会改变容器的大小；array 不支持这些操作。`forward_list` 有自己的 insert 和 `emplace` 的版本；`forward_list` 并不支持 `push_back` 和 `emplace_back`。string 和 vector 不支持 `push_front` 和 `emplace_front`；
 
 - `c.push_back(t)` `c.emplace_back(args)` 在容器 c 的尾部创建一个元素，其值为 t 或者以 args 为参数进行构建，无返回值；
 - `c.push_front(t)` `c.emplace_front(args)` 在容器 c 的头部创建一个元素，其值为 t 或者以 args 为参数进行构建，无返回值；
@@ -403,7 +403,7 @@ if (storeA < storeB) // 错误：Sales_data 没有小于操作符
 
 **使用 `push_back`**
 
-`push_back` 可以在容器的尾部添加元素，除了 array 和 `forward_list` 所有的顺序容器都支持 `push_back`。如：
+`push_back` 可以在容器的尾部添加元素，除了 `array` 和 `forward_list` 所有的顺序容器都支持 `push_back`。如：
 ````cpp
 string word;
 while (cin >> word)
@@ -415,11 +415,11 @@ word.push_back('s');
 ````
 **关键概念：容器元素是拷贝的**
 
-当我们使用对象来初始化容器，或者插入一个对象到容器中时，放入容器中的是哪个对象值的拷贝，不是对象本身。这就像我们传递一个对象给非引用参数是一样的，容器中的元素与这个对象没有任何关系。接下来如果改变了元素的值并不会影响到原始值，反之亦然。
+当我们使用对象来初始化容器，或者插入一个对象到容器中时，放入容器中的是那个对象值的拷贝，不是对象本身。这就像我们传递一个对象给非引用参数是一样的，容器中的元素与这个对象没有任何关系。接下来如果改变了元素的值并不会影响到原始值，反之亦然。
 
 **使用 `push_front`**
 
-list 、`forward_list` 和 deque 支持类似的操作 `push_front` ，这个操作在容器的首部插入一个新的元素：
+`list` 、`forward_list` 和 `deque` 支持类似的操作 `push_front` ，这个操作在容器的首部插入一个新的元素：
 
 ````cpp
 list<int> ilist;
@@ -432,7 +432,7 @@ deque 和 vector 一样支持对其元素的快速随机访问，并且提供 `p
 
 **在容器的特定位置添加元素**
 
-`push_back` 和 `push_front` 操作提供了方便的方式在顺序容器的头尾插入单个元素。更为通用的是 insert 成员允许我们在容器的任何位置插入零个或更多元素。vector 、 deque 、 list 和 string 支持 insert 成员。 `forward_list` 提供了这些成员的特别版本。
+`push_back` 和 `push_front` 操作提供了方便的方式在顺序容器的头尾插入单个元素。更为通用的是 `insert` 成员函数允许我们在容器的任何位置插入零个或更多元素。`vector 、 deque 、 list` 和 `string` 支持 `insert` 成员。 `forward_list` 提供了这些成员的特别版本。
 
 每个 insert 函数都以一个迭代器作为其第一个参数。这个迭代器表示元素将被插入的位置，它可以是容器中的任何位置，包括容器的尾后位置。由于迭代器可能指向尾后的不存在的元素，并且需要支持在容器的头部插入元素，元素将被插入到迭代器表示的位置之前。如：
 ````cpp
@@ -440,7 +440,7 @@ slist.insert(iter, "Hello!");
 ````
 将插入一个字符串到 iter 所表示的元素之前。
 
-尽管有些容器没有 `push_front` 操作，insert 并没有这种限制。可以在容器的前面 insert 元素而不用担心容器是否支持 `push_front`：
+尽管有些容器没有 `push_front` 操作，`insert` 并没有这种限制。可以在容器的前面 `insert` 元素而不用担心容器是否支持 `push_front`：
 ````cpp
 vector<string> svec;
 list<string> slist;
@@ -483,16 +483,16 @@ while (cin >> word)
 
 **使用 emplace 操作**
 
-新标准加入三个新的成员 `emplace_front` 、 emplace 和 `emplace_back` ，这三个成员对应于 `push_front` 、 insert 和 `push_back`，只是它们不是拷贝元素而是直接构建。
+新标准加入三个新的成员 `emplace_front` 、 `emplace` 和 `emplace_back` ，这三个成员对应于 `push_front` 、 `insert` 和 `push_back`，只是它们不是拷贝元素而是直接构建。
 
-当我们调用 emplace 成员时，传递给元素类型的构造函数的参数，并以这些参数直接直接构建一个对象放在容器中。如在 c 中置入 `Sales_data` 元素：
+当我们调用 `emplace` 成员函数时，传递给元素类型的构造函数的参数，并以这些参数直接直接构建一个对象放在容器中。如在 c 中置入 `Sales_data` 元素：
 ````cpp
 c.emplace_back("987-0590353403", 25, 15.99); //(1)
 c.push_back(Sales_data("987-0590353403", 25, 15.99)); //(2)
 ````
 (1) 是直接在容器中构建对象，(2) 则是先创建一个本地临时量，然后将其置入容器中。
 
-传递给 emplace 函数的参数与元素类型有关。参数必须与元素类型的一个构造函数参数列表匹配：
+传递给 `emplace` 函数的参数与元素类型有关。参数必须与元素类型的一个构造函数参数列表匹配：
 ````cpp
 c.emplace_back(); // 调用 Sales_data 的默认构造函数
 c.emplace_back(iter, "999-999999999");
@@ -539,7 +539,7 @@ if (!c.empty()) {
 
 **下标操作和安全的随机访问**
 
-提供快速随机访问的容器（string、vector、deque 和 array）同时提供了下标操作。下标操作符用一个索引返回那个位置的元素的引用。索引必须是在安全范围内的（大于等于 0 并且小于容器的大小）。保证索引是合法的是程序的责任；下标操作不会检查索引是否在范围内。使用超出范围的索引是严重的编程错误，但是这个错误是编译器发现不了的。
+提供快速随机访问的容器（string、vector、deque 和 array）同时提供了下标操作。下标操作符用一个索引返回那个位置的元素的引用。索引必须是在安全范围内的（大于等于 0 并且小于容器的大小）。保证索引是合法的是程序员的责任；下标操作不会检查索引是否在范围内。使用超出范围的索引是严重的编程错误，但是这个错误是编译器发现不了的。
 
 如果想要保证索引是合法的，可以使用 at 成员。at 成员的行为与下表操作符类型，但是当索引是不合法的时候，at 将抛出 `out_of_range` 异常：
 ````cpp
@@ -606,7 +606,7 @@ elem1 -> elem2 -> elem3 -> elem4
 
 当我们给单链表添加或删除元素时，被增加或删除的元素的之前那个元素的 next 改变了。所以，为了添加或移除元素，我们需要访问其前置元素，从而才能更新那个元素的 next 连接。然而，对于 `forward_list` 这种单链表来说很难获得一个元素的前置元素。基于这个原因，在 `forward_list` 中的添加或移除元素操作改变的是给定元素后面的那个元素。这样总能访问到由于改变而影响到的元素。
 
-由于这些操作在 `forward_list` 上的不同表现，`forward_list` 没有定义 insert 、 emplace 和 erase ，相反它定义 `insert_after` `emplace_after` 和 `erase_after`，如为了移除 elem3 ，我们可以在 elem2 的迭代器上调用 `erase_after`，为了支持这些操作，`forward_list` 定义了 `before_begin` 返回首前迭代器（off-the-beginning iterator）。这个迭代器允许我们在一个首元素之前的不存在的元素之后添加或移除一个元素。
+由于这些操作在 `forward_list` 上的不同表现，`forward_list` 没有定义 `insert` 、 `emplace` 和 `erase` ，相反它定义 `insert_after` `emplace_after` 和 `erase_after`，如为了移除 elem3 ，我们可以在 elem2 的迭代器上调用 `erase_after`，为了支持这些操作，`forward_list` 定义了 `before_begin` 返回首前迭代器（off-the-beginning iterator）。这个迭代器允许我们在一个首元素之前的不存在的元素之后添加或移除一个元素。
 
 `forward_list` 中插入和移除元素的操作：
 
@@ -690,7 +690,7 @@ vector 和 string 类型提供了一些成员用于与内存分配部分的实�
 
 reserve 不会改变容器中元素的数目；它仅仅影响 vector 预分配的内存的大小。
 
-调用 reserve 只有在请求的空间大于当前容量时才会改变 vector 的容量。如果请求的大小待遇当前容量，reserve 将会分配至少相当于（甚至更多）请求的内存大小。
+调用 reserve 只有在请求的空间大于当前容量时才会改变 vector 的容量。如果请求的大小等于当前容量，reserve 将会分配至少相当于（甚至更多）请求的内存大小。
 
 如果请求的大小小于或等于当前的容量，reserve 将不做任何事。特别是，如果 reserve 的参数所表示的大小比 capacity 小，不会导致容器收缩内存。所以，在调用 reserve 之后，capacity 将会大于等于传递给 reserve 的参数。
 
@@ -760,7 +760,7 @@ string s5 = s.substr(12); // 抛出 out_of_range
 
 ### 9.5.2 改变 string 的其它方式
 
-string 类型除了支持顺序容器的赋值操作符和 assign，insert 以及 erase 操作外。它自己还定义了额外的 insert 和 erase 版本。
+string 类型除了支持顺序容器的赋值操作符和 `assign`，`insert` 以及 `erase` 操作外。它自己还定义了额外的 `insert` 和 `erase` 版本。
 
 除了定义接收迭代器的 insert 和 erase，string 提供了接收索引的版本。索引表示开始移除的元素，或者表示插入值到指定位置前。如：
 ````cpp
@@ -777,7 +777,7 @@ s.insert(s.size(), cp+7);
 
 当我们调用 insert 时，我们是想在 s 的尾部（一个不存在的字符 `s[s.size()]` 之前）插入字符，在这种情况下我们从 cp 之后的第 7 个字符开始拷贝知道数组的 NULL 字符为止（不包括 NULL 字符）。
 
-我们还以指定让 insert 或 assign 的字符来自于另外一个 string 或者它的子串：
+我们还可以指定让 insert 或 assign 的字符来自于另外一个 string 或者它的子串：
 ````cpp
 string  s = "some string", s2 = "some other string";
 s.insert(0, s2);
@@ -785,7 +785,7 @@ s.insert(0, s2);
 s.insert(0, s2, 0, s2.size());
 ````
 
-**append 和 repalce 函数**
+**append 和 replace 函数**
 
 string 类还定义了两个额外的成员 append 和 replace 来改变 string 的内容。append 操作是一种在字符串尾部插入字符的快捷方式：
 ````cpp
@@ -913,7 +913,7 @@ d = stod(s2.substr(s2.find_first_of("+-.0123456789")));
 
 ## 9.6 容器适配器
 
-除了顺序容器，标准库还定义了三个顺序容器适配器（adaptor）：stack, queue 和 `priority_queue`。适配器是标准库中的通用概念。其中包含容器适配器、迭代器适配器和函数适配器。本质上，适配器是一种使得让一个物件表现得像另外一个物件的机制。容器适配器（container adaptor）使得一个现存的容器类型在行为上看起来像是一个不同的类型。如 stack 适配器让一个顺序容器（非 array 或 `forward_list`）的行为看起来好像是一个 stack。
+除了顺序容器，标准库还定义了三个顺序容器适配器（adaptor）：`stack`, `queue` 和 `priority_queue`。适配器是标准库中的通用概念。其中包含容器适配器、迭代器适配器和函数适配器。本质上，适配器是一种使得让一个物件表现得像另外一个物件的机制。容器适配器（container adaptor）使得一个现存的容器类型在行为上看起来像是一个不同的类型。如 stack 适配器让一个顺序容器（非 `array` 或 `forward_list`）的行为看起来好像是一个 stack。
 
 以下是所有的容器适配器共有的操作和类型：
 
@@ -929,7 +929,7 @@ d = stod(s2.substr(s2.find_first_of("+-.0123456789")));
 
 **定义一个适配器**
 
-每个适配都定义了两个构造函数：默认构造函数以创建一个空的对象，以及接收一个容器的构造函数并将适配器初始化为给定容器的拷贝。如假设 deq 是 `deque<int>` 可以将 deq 用于初始化 stack：
+每个适配器都定义了两个构造函数：默认构造函数以创建一个空的对象，以及接收一个容器的构造函数并将适配器初始化为给定容器的拷贝。如假设 deq 是 `deque<int>` 可以将 deq 用于初始化 stack：
 ````cpp
 stack<int> stk(deq);  // 将 deq 中的元素拷贝到 stk 中
 ````
@@ -941,7 +941,7 @@ stack<string, vector<string>> str_stk;  // 以 vector 创建空的 stack
 stack<string, vector<string>> str_stk2(svec);
 ````
 
-对于哪些容器可以被用于一个给定的适配器是有限制的。所有的适配器都需要有添加和移除元素的能力。因而不能将 array 用于适配器，同样不能使用 `forward_list` ，原因是所有适配器都需要能够添加、移除和访问容器中最后一个元素。stack 只需要 `push_back`, `pop_back` 和 back 操作，所以可以将所有的剩下的容器类型用于 stack。queue 适配器需要 back, `push_back`, front 和 `push_front` 操作，所以它可以建立在 list 或 deque 上而不能是 vector。`priority_queue` 除了 front, `push_back` 和 `pop_back` 操作以及快速随机访问，所以它可以建立在 vector 或 deque 上，而不能在 list 上。
+对于哪些容器可以被用于一个给定的适配器是有限制的。所有的适配器都需要有添加和移除元素的能力。因而不能将 array 用于适配器，同样不能使用 `forward_list` ，原因是所有适配器都需要能够添加、移除和访问容器中最后一个元素。stack 只需要 `push_back`, `pop_back` 和 `back` 操作，所以可以将所有的剩下的容器类型用于 stack。queue 适配器需要 `back`, `push_back`,` front` 和 `push_front` 操作，所以它可以建立在 list 或 deque 上而不能是 vector。`priority_queue` 除了 `front`, `push_back` 和 `pop_back` 操作以及快速随机访问，所以它可以建立在 vector 或 deque 上，而不能在 list 上。
 
 **stack 适配器**
 
@@ -967,9 +967,9 @@ while (!intStack.empty()) {
 
 **queue 适配器**
 
-queue 和 `priority_queue` 适配器都定义在 queue 头文件中。以下是所有操作：
+`queue` 和 `priority_queue` 适配器都定义在 queue 头文件中。以下是所有操作：
 
-默认情况下 queue 使用 deque，`priority_queue` 使用 vector；queue 可以使用 list 或 vector 作为底层容器类型，`priority_queue` 可以使用 deque。
+默认情况下 `queue` 使用 deque，`priority_queue` 使用 vector；queue 可以使用 list 或 vector 作为底层容器类型，`priority_queue` 可以使用 deque。
 
 - `q.pop()` 移除但是不返回，queue 首元素或者 `priority_queue` 最高优先级的元素；
 - `q.front()` `q.back()` 返回但是不移除 q 的首元素或尾元素，只有 queue 支持这两个操作；

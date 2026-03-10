@@ -1,0 +1,29 @@
+/* * Obsidian 文本宽度自定义片段
+ * 核心逻辑：通过覆盖原生变量和类名实现精准宽度控制
+ */
+
+:root {
+    /* 1. 定义一个全局变量，方便以后在这里统一修改数值 */
+    --file-max-width: 1000px; 
+}
+
+/* 2. 针对编辑模式 (Live Preview & Source Mode) */
+.markdown-source-view.mod-cm6.is-readable-line-width .cm-content,
+.markdown-source-view.mod-cm6.is-readable-line-width .cm-line {
+    max-width: var(--file-max-width) !important;
+    margin: auto !important;
+    width: 100% !important;
+}
+
+/* 3. 针对阅读模式 (Reading Mode) */
+.markdown-rendered.is-readable-line-width .markdown-preview-sizer {
+    max-width: var(--file-max-width) !important;
+    margin: auto !important;
+    width: 100% !important;
+}
+
+/* 4. 确保属性面板等 UI 元素也遵循此宽度（可选） */
+.is-readable-line-width .metadata-container {
+    max-width: var(--file-max-width) !important;
+    margin: auto !important;
+}

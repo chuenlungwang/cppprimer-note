@@ -1,0 +1,8 @@
+{
+  "baseFontSizeAction": true,
+  "baseFontSize": 17,
+  "enabledCssSnippets": [
+    "custom-width"
+  ],
+  "cssTheme": "Minimal"
+}

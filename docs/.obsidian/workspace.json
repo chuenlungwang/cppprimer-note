@@ -1,0 +1,201 @@
+{
+  "main": {
+    "id": "047b00899b8c3d5f",
+    "type": "split",
+    "children": [
+      {
+        "id": "855152c0e11dc0d4",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "76931fad650e26f0",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "CH16_Templates_and_Generic_Programming.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "CH16_Templates_and_Generic_Programming"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "bc6e2a17ce9dcaa2",
+    "type": "split",
+    "children": [
+      {
+        "id": "2afcaf7012945565",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "fbb3b582be2b2b72",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "文件列表"
+            }
+          },
+          {
+            "id": "ca93a6223f99a2f2",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "搜索"
+            }
+          },
+          {
+            "id": "f06fadf2e3075732",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "书签"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 364.5,
+    "collapsed": true
+  },
+  "right": {
+    "id": "510208b2047e4365",
+    "type": "split",
+    "children": [
+      {
+        "id": "cba2eb8e63d3e412",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "88e808ffc6b3fc9b",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "CH10_Generic_Algorithms.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "CH10_Generic_Algorithms 的反向链接列表"
+            }
+          },
+          {
+            "id": "1bdc28bbbcfe688b",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "CH10_Generic_Algorithms.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "CH10_Generic_Algorithms 的出链列表"
+            }
+          },
+          {
+            "id": "a3e75c7dd70d6386",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "标签"
+            }
+          },
+          {
+            "id": "d7c678f23932c012",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "添加笔记属性"
+            }
+          },
+          {
+            "id": "a2d56c4c52355858",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "CH10_Generic_Algorithms.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "CH10_Generic_Algorithms 的大纲"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false,
+      "bases:新建数据库": false
+    }
+  },
+  "active": "76931fad650e26f0",
+  "lastOpenFiles": [
+    "CH15_Object-Oriented_Programming.md",
+    "CH14_Overloaded_Operations_and_Conversions.md",
+    "CH13_Copy_Control.md",
+    "CH12_Dynamic_Memory.md",
+    "CH11_Associative_Containers.md",
+    "CH10_Generic_Algorithms.md",
+    "CH09_Sequential_Containers.md",
+    "CH08_The_IO_Library.md",
+    "CH03_Strings_Vectors_and_Arrays.md",
+    "CH02_Variables_and_Basic_Types.md",
+    "CH01_Getting_Started.md"
+  ]
+}
